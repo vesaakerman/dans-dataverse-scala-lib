@@ -17,8 +17,8 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
-case class DataverseInstanceConfig(connectionTimeout: Int,
-                                   readTimeout: Int,
-                                   baseUrl: URI,
+case class DataverseInstanceConfig(baseUrl: URI,
                                    apiToken: String,
-                                   apiVersion: String)
+                                   connectionTimeout: Int = 5000,
+                                   readTimeout: Int = 300000,
+                                   apiVersion: String = "1")

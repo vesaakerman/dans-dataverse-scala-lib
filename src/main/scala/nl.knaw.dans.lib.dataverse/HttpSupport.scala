@@ -28,7 +28,7 @@ import scalaj.http.{ Http, HttpResponse, MultiPart }
 
 import scala.util.{ Failure, Success, Try }
 
-trait HttpSupport extends DebugEnhancedLogging {
+private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   implicit val jsonFormats: Formats = DefaultFormats
   protected val connectionTimeout: Int
   protected val readTimeout: Int
@@ -79,7 +79,6 @@ trait HttpSupport extends DebugEnhancedLogging {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
       response <- http("GET", uri, body = null, Map("X-Dataverse-key" -> apiToken))
-      body <- handleResponse(response, 200)
     } yield response
   }
 

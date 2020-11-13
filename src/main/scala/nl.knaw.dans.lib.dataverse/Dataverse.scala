@@ -24,7 +24,7 @@ import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class Dataverse(dvId: String, configuration: DataverseInstanceConfig)(implicit resultOutput: PrintStream) extends HttpSupport with DebugEnhancedLogging {
+class Dataverse private[dataverse] (dvId: String, configuration: DataverseInstanceConfig)(implicit resultOutput: PrintStream) extends HttpSupport with DebugEnhancedLogging {
   trace(dvId)
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout

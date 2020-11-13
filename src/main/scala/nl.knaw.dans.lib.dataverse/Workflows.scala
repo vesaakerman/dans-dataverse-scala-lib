@@ -22,7 +22,7 @@ import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class Workflows(configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+class Workflows private[dataverse] (configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
