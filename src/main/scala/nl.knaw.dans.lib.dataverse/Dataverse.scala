@@ -18,7 +18,7 @@ package nl.knaw.dans.lib.dataverse
 import java.net.URI
 
 import better.files.File
-import nl.knaw.dans.lib.dataverse.model.DataMessage
+import nl.knaw.dans.lib.dataverse.model.{ DataMessage, DataverseItem, Role }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scalaj.http.HttpResponse
 
@@ -33,7 +33,9 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   protected val apiVersion: String = configuration.apiVersion
 
   /**
-   * Creates a dataverse based on a definition provided in a JSON file
+   * Creates a dataverse based on a definition provided in a JSON file.
+   *
+   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#create-a-dataverse]]
    *
    * @param jsonFile the JSON file with the dataverse definition
    * @return
@@ -47,6 +49,8 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Creates a dataverse base on a definition provided as model object.
    *
+   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#create-a-dataverse]]
+   *
    * @param dd the model object
    * @return
    */
@@ -59,7 +63,9 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   }
 
   /**
-   * Retrieves the definition a dataverse.
+   * Returns the definition of a dataverse.
+   *
+   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#view-a-dataverse]]
    *
    * @return
    */
@@ -68,24 +74,83 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     get2(s"dataverses/$dvId")
   }
 
+  /**
+   * Deletes a dataverse.
+   *
+   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#delete-a-dataverse]]
+   *
+   * @return
+   */
   def delete(): Try[DataverseResponse[DataMessage]] = {
     trace(())
     deletePath2[DataMessage](s"dataverses/$dvId")
   }
 
-  def show(): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * Returns the contents of a dataverse (datasets and sub-verses)
+   *
+   *
+   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#show-contents-of-a-dataverse]]
+   *
+   * @return
+   */
+   def contents(): Try[DataverseResponse[List[DataverseItem]]] = {
     trace(())
-    get(s"dataverses/$dvId/contents")
+    get2[List[DataverseItem]](s"dataverses/$dvId/contents")
   }
 
-  def listRoles(): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * Returns the roles defined in a dataverse.
+   *
+   * @see https://guides.dataverse.org/en/5.1.1/api/native-api.html#list-roles-defined-in-a-dataverse
+   *
+   * @return
+   */
+  def listRoles(): Try[DataverseResponse[List[Role]]] = {
     trace(())
-    get(s"dataverses/$dvId/roles")
+    get2[List[Role]](s"dataverses/$dvId/roles")
+  }
+  // DataverseResponse[DataMessage]
+
+  /**
+   * Creates a role based on a definition provided in a JSON file.
+   *
+   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#create-a-new-role-in-a-dataverse]]
+   *
+   * @param jsonFile the JSON file with the role definition
+   * @return
+   */
+  def createRole(jsonFile: File): Try[DataverseResponse[Role]] = {
+    trace(jsonFile)
+    tryReadFileToString(jsonFile).flatMap(postJson2[Role](s"dataverses/$dvId/roles"))
   }
 
-  def createRole(jsonDef: File): Try[HttpResponse[Array[Byte]]] = {
-    trace(jsonDef)
-    tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId/roles"))
+  /**
+   * Creates a role base on a definition provided as model object.
+   *
+   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#create-a-new-role-in-a-dataverse]]
+   *
+   * @param role the model object
+   * @return
+   */
+  def createRole(role: Role): Try[DataverseResponse[Role]] = {
+    trace(role)
+    for {
+      jsonString <- serializeAsJson(role, logger.underlying.isDebugEnabled)
+      response <- postJson2[Role](s"dataverses/$dvId/roles") (jsonString)
+    } yield response
+  }
+
+  /**
+   * Return the data (file) size of a Dataverse.
+   *
+   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#report-the-data-file-size-of-a-dataverse]]
+   *
+   * @return
+   */
+  def storageSize(): Try[DataverseResponse[DataMessage]] = {
+    trace(())
+    get2[DataMessage](s"dataverses/$dvId/storagesize")
   }
 
   def listFacets(): Try[HttpResponse[Array[Byte]]] = {
