@@ -19,7 +19,7 @@ import java.net.URI
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DefaultRole.DefaultRole
-import nl.knaw.dans.lib.dataverse.model.{ DataMessage, DataverseItem, Role, RoleAssignmentReadOnly }
+import nl.knaw.dans.lib.dataverse.model.{ DataMessage, DataverseItem, Role, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scalaj.http.HttpResponse
 
@@ -36,7 +36,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Creates a dataverse based on a definition provided in a JSON file.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#create-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-dataverse]]
    * @param jsonFile the JSON file with the dataverse definition
    * @return
    */
@@ -49,7 +49,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Creates a dataverse base on a definition provided as model object.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#create-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-dataverse]]
    * @param dd the model object
    * @return
    */
@@ -64,7 +64,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Returns the definition of a dataverse.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#view-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#view-a-dataverse]]
    * @return
    */
   def view(): Try[DataverseResponse[model.Dataverse]] = {
@@ -75,7 +75,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Deletes a dataverse.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#delete-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-a-dataverse]]
    * @return
    */
   def delete(): Try[DataverseResponse[DataMessage]] = {
@@ -86,7 +86,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Returns the contents of a dataverse (datasets and sub-verses)
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#show-contents-of-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#show-contents-of-a-dataverse]]
    * @return
    */
   def contents(): Try[DataverseResponse[List[DataverseItem]]] = {
@@ -97,7 +97,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Returns the roles defined in a dataverse.
    *
-   * @see https://guides.dataverse.org/en/5.1.1/api/native-api.html#list-roles-defined-in-a-dataverse
+   * @see https://guides.dataverse.org/en/latest/api/native-api.html#list-roles-defined-in-a-dataverse
    * @return
    */
   def listRoles(): Try[DataverseResponse[List[Role]]] = {
@@ -110,7 +110,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Creates a role based on a definition provided in a JSON file.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#create-a-new-role-in-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-new-role-in-a-dataverse]]
    * @param jsonFile the JSON file with the role definition
    * @return
    */
@@ -122,7 +122,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Creates a role base on a definition provided as model object.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#create-a-new-role-in-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-new-role-in-a-dataverse]]
    * @param role the model object
    * @return
    */
@@ -137,7 +137,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Return the data (file) size of a Dataverse.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#report-the-data-file-size-of-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#report-the-data-file-size-of-a-dataverse]]
    * @return
    */
   def storageSize(): Try[DataverseResponse[DataMessage]] = {
@@ -148,7 +148,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Returns the list of active facets for a dataverse.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#list-facets-configured-for-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-facets-configured-for-a-dataverse]]
    * @return
    */
   def listFacets(): Try[DataverseResponse[List[String]]] = {
@@ -159,7 +159,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * Sets the list of active facets for a dataverse.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#set-facets-for-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#set-facets-for-a-dataverse]]
    * @param facets the list of facets
    * @return
    */
@@ -174,7 +174,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   /**
    * List all the role assignments at the given dataverse.
    *
-   * @see [[https://guides.dataverse.org/en/5.1.1/api/native-api.html#list-role-assignments-in-a-dataverse]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-role-assignments-in-a-dataverse]]
    *
    * @return
    */
@@ -184,9 +184,13 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   }
 
   /**
-   * Sets the
+   * Assigns a default role to a user creating a dataset in a dataverse.
    *
-   * @param role
+   * Note: there does not seem to be a way to retrieve the current default role via the API.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#assign-default-role-to-user-creating-a-dataset-in-a-dataverse]]
+   *
+   * @param role the role to assign
    * @return
    */
   def setDefaultRole(role: DefaultRole): Try[DataverseResponse[DataMessage]] = {
@@ -198,6 +202,22 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     trace(jsonDef)
     tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId/assignments"))
   }
+
+  /**
+   * 
+   *
+   * @param roleAssignment
+   * @return
+   */
+  def assignRole(roleAssignment: RoleAssignment): Try[DataverseResponse[Any]] = {
+    trace(roleAssignment)
+    for {
+      jsonString <- serializeAsJson(roleAssignment, logger.underlying.isDebugEnabled)
+      response <- postJson2[Any](s"dataverses/$dvId/asignments")(jsonString)
+    } yield response
+  }
+
+
 
   def unassignRole(assignmentId: String): Try[HttpResponse[Array[Byte]]] = {
     trace(assignmentId)

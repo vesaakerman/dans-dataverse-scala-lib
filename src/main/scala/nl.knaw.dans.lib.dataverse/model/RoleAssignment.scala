@@ -15,11 +15,6 @@
  */
 package nl.knaw.dans.lib.dataverse.model
 
-case class RoleAssignmentReadOnly private(id: Int,
-                                          assignee: String,
-                                          roleId: Int,
-                                          _roleAlias: String,
-                                          definitionPointId: Int)
 
 case class RoleAssignment(assignee: String, role: String)
 
