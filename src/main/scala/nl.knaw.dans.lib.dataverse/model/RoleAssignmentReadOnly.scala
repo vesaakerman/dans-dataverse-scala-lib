@@ -15,14 +15,11 @@
  */
 package nl.knaw.dans.lib.dataverse.model
 
-/**
- *
- *
- *
- * @param id
- * @param assignee
- * @param roleId
- * @param _roleAlias
- * @param definitionPointId
- */
-case class RoleAssignment(id: Int, assignee: String, roleId: Int, _roleAlias: String, definitionPointId: Int)
+case class RoleAssignmentReadOnly private(id: Int,
+                                          assignee: String,
+                                          roleId: Int,
+                                          _roleAlias: String,
+                                          definitionPointId: Int)
+
+case class RoleAssignment(assignee: String, role: String)
+

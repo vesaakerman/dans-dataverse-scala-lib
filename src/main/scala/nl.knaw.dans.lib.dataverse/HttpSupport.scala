@@ -129,6 +129,15 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     } yield response
   }
 
+  protected def put2[P: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[P]] = {
+    for {
+      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
+      _ = debug(s"Request URL = $uri")
+      response <- http2[P]("PUT", uri, body, Map("X-Dataverse-key" -> apiToken))
+    } yield response
+  }
+
+
   protected def deletePath(subPath: String = null): Try[HttpResponse[Array[Byte]]] = {
     for {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")

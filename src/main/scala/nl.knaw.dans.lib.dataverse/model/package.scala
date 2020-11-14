@@ -21,4 +21,10 @@ package nl.knaw.dans.lib.dataverse
  * TODO: add few simple examples.
  */
 package object model {
+
+  object DefaultRole extends Enumeration {
+    type DefaultRole = Value
+    val curator, contributor, none = Value
+  }
 }
+
