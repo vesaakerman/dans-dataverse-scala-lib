@@ -31,14 +31,22 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   protected val apiToken: String = configuration.apiToken
   protected val apiVersion: String = configuration.apiVersion
 
-  def create(jsonDef: File): Try[HttpResponse[Array[Byte]]] = {
+  def create(jsonDef: File): Try[Response] = {
     trace(jsonDef)
     tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId"))
   }
 
-  def view(): Try[HttpResponse[Array[Byte]]] = {
+  def create(dd: model.Dataverse): Try[Response] = {
+    trace(dd)
+    for {
+      json <- serializeAsJson(dd, logger.underlying.isDebugEnabled)
+      response <- postJson (s"dataverses/$dvId") (json)
+    } yield response
+  }
+
+  def view(): Try[DataverseResponse[model.Dataverse]] = {
     trace(())
-    get(s"dataverses/$dvId")
+    get2(s"dataverses/$dvId")
   }
 
   def delete(): Try[HttpResponse[Array[Byte]]] = {

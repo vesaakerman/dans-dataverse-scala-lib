@@ -27,6 +27,8 @@ import scalaj.http.{ Http, HttpResponse, MultiPart }
 import scala.util.Try
 
 private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
+  type Response = HttpResponse[Array[Byte]]
+
   protected val connectionTimeout: Int
   protected val readTimeout: Int
   protected val baseUrl: URI
@@ -41,6 +43,18 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       .headers(headers)
       .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
       .asBytes
+  }
+
+  private def http2[P: Manifest](method: String, uri: URI, body: String = null, headers: Map[String, String] = Map.empty[String, String])(expectedStatus: Int*): Try[DataverseResponse[P]] = Try {
+    val response = {
+      if (body == null) Http(uri.toASCIIString)
+      else Http(uri.toASCIIString).postData(body)
+    }.method(method)
+      .headers(headers)
+      .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
+      .asBytes
+    if (response.code >= 200 && response.code < 300) new DataverseResponse(response)
+    else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
   }
 
   protected def httpPostMulti(uri: URI, file: File, optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[HttpResponse[Array[Byte]]] = Try {
@@ -70,6 +84,15 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
       response <- http("GET", uri, body = null, Map("X-Dataverse-key" -> apiToken))
+    } yield response
+  }
+
+
+  protected def get2[P: Manifest](subPath: String = null): Try[DataverseResponse[P]] = {
+    for {
+      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
+      _ = debug(s"Request URL = $uri")
+      response <- http2("GET", uri, body = null, Map("X-Dataverse-key" -> apiToken))(200)
     } yield response
   }
 
