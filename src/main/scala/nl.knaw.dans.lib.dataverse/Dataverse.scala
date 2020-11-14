@@ -18,6 +18,7 @@ package nl.knaw.dans.lib.dataverse
 import java.net.URI
 
 import better.files.File
+import nl.knaw.dans.lib.dataverse.model.DataMessage
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scalaj.http.HttpResponse
 
@@ -31,27 +32,45 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   protected val apiToken: String = configuration.apiToken
   protected val apiVersion: String = configuration.apiVersion
 
-  def create(jsonDef: File): Try[Response] = {
-    trace(jsonDef)
-    tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId"))
+  /**
+   * Creates a dataverse based on a definition provided in a JSON file
+   *
+   * @param jsonFile the JSON file with the dataverse definition
+   * @return
+   */
+  def create(jsonFile: File): Try[DataverseResponse[model.Dataverse]] = {
+    trace(jsonFile)
+    tryReadFileToString(jsonFile)
+      .flatMap(postJson2[model.Dataverse](s"dataverses/$dvId"))
   }
 
-  def create(dd: model.Dataverse): Try[Response] = {
+  /**
+   * Creates a dataverse base on a definition provided as model object.
+   *
+   * @param dd the model object
+   * @return
+   */
+  def create(dd: model.Dataverse): Try[DataverseResponse[model.Dataverse]] = {
     trace(dd)
     for {
-      json <- serializeAsJson(dd, logger.underlying.isDebugEnabled)
-      response <- postJson (s"dataverses/$dvId") (json)
+      jsonString <- serializeAsJson(dd, logger.underlying.isDebugEnabled)
+      response <- postJson2[model.Dataverse](s"dataverses/$dvId") (jsonString)
     } yield response
   }
 
+  /**
+   * Retrieves the definition a dataverse.
+   *
+   * @return
+   */
   def view(): Try[DataverseResponse[model.Dataverse]] = {
     trace(())
     get2(s"dataverses/$dvId")
   }
 
-  def delete(): Try[HttpResponse[Array[Byte]]] = {
+  def delete(): Try[DataverseResponse[DataMessage]] = {
     trace(())
-    deletePath(s"dataverses/$dvId")
+    deletePath2[DataMessage](s"dataverses/$dvId")
   }
 
   def show(): Try[HttpResponse[Array[Byte]]] = {

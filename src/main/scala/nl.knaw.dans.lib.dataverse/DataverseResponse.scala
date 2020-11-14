@@ -35,7 +35,7 @@ class DataverseResponse[P: Manifest](httpResponse: HttpResponse[Array[Byte]]) {
     string.map(s => JsonMethods.parse(s))
   }
 
-  def payload: Try[P] = {
+  def data: Try[P] = {
     json
       .map(_.extract[DataverseMessage[P]])
       .map(_.data)

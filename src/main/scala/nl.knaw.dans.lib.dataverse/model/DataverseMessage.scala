@@ -38,18 +38,29 @@ package nl.knaw.dans.lib.dataverse.model
  * */
 case class DataverseMessage[P](status: String, data: P)
 
+/**
+ * For informational OK messages Dataverse sometimes (?) uses a separate object with one key - "message" - in the data field.
+ *
+ * @param message the informational message
+ */
+case class DataMessage(message: String)
+
 object DataverseMessage {
 
   /**
-   * Constructs a [[DataverseMessage]] that contains an error message from Dataverse. The `message` field content is put in the `data` field of the `DataverseMessage` object.
+   * Constructs a [[DataverseMessage]] that contains status message from Dataverse. The `message` field content is put in the `data` field of the `DataverseMessage` object.
+   * Typically this message is an error. OK messages seem to be put in a wrapper object that is then put into the "data" field. See [[DataMessage]].
    *
-   * @param status  the status (which will be `ERROR`)
+   * @param status  the status, OK or ERROR
    * @param message the error message
    * @return the DataverseMessage object
    */
   def apply(status: String, message: String): DataverseMessage[String] = {
     DataverseMessage(status, data = message)
   }
+
+
+
 }
 
 

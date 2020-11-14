@@ -45,7 +45,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       .asBytes
   }
 
-  private def http2[P: Manifest](method: String, uri: URI, body: String = null, headers: Map[String, String] = Map.empty[String, String])(expectedStatus: Int*): Try[DataverseResponse[P]] = Try {
+  private def http2[P: Manifest](method: String, uri: URI, body: String = null, headers: Map[String, String] = Map.empty[String, String]): Try[DataverseResponse[P]] = Try {
     val response = {
       if (body == null) Http(uri.toASCIIString)
       else Http(uri.toASCIIString).postData(body)
@@ -92,7 +92,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     for {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
-      response <- http2("GET", uri, body = null, Map("X-Dataverse-key" -> apiToken))(200)
+      response <- http2[P]("GET", uri, body = null, Map("X-Dataverse-key" -> apiToken))
     } yield response
   }
 
@@ -103,6 +103,15 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       response <- http("POST", uri, body, Map("Content-Type" -> "application/json", "X-Dataverse-key" -> apiToken))
     } yield response
   }
+
+  protected def postJson2[P: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[P]] = {
+    for {
+      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
+      _ = debug(s"Request URL = $uri")
+      response <- http2[P]("POST", uri, body, Map("Content-Type" -> "application/json", "X-Dataverse-key" -> apiToken))
+    } yield response
+  }
+
 
   protected def postText(subPath: String = null)(body: String = null): Try[HttpResponse[Array[Byte]]] = {
     for {
@@ -125,6 +134,14 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
       response <- http("DELETE", uri, null, Map("X-Dataverse-key" -> apiToken))
+    } yield response
+  }
+
+  protected def deletePath2[P: Manifest](subPath: String = null): Try[DataverseResponse[P]] = {
+    for {
+      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
+      _ = debug(s"Request URL = $uri")
+      response <- http2[P]("DELETE", uri, null, Map("X-Dataverse-key" -> apiToken))
     } yield response
   }
 

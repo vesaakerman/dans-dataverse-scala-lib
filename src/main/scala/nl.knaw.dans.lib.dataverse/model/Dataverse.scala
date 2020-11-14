@@ -15,11 +15,15 @@
  */
 package nl.knaw.dans.lib.dataverse.model
 
-case class Dataverse(name: String,
+case class Dataverse(id: Option[Int] = None,
+                     ownerId: Option[Int] = None,
+                     name: String,
                      alias: String,
                      dataverseContacts: List[DataverseContact],
-                     affiliation: Option[String],
-                     description: Option[String],
-                     dataverseType: String)
+                     permissionRoot: Boolean = true,
+                     affiliation: Option[String] = None,
+                     description: Option[String] = None,
+                     dataverseType: String,
+                     storageDriverLabel: Option[String] = None)
 
-case class DataverseContact(contactEmail: String)
+case class DataverseContact(displayOrder: Option[Int] = None, contactEmail: String)
