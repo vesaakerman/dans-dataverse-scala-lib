@@ -22,21 +22,18 @@ import java.nio.charset.StandardCharsets
 import better.files.File
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.io.FileUtils
-import org.json4s.native.{ JsonParser, Serialization }
-import org.json4s.{ DefaultFormats, Formats }
 import scalaj.http.{ Http, HttpResponse, MultiPart }
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
 private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
-  implicit val jsonFormats: Formats = DefaultFormats
   protected val connectionTimeout: Int
   protected val readTimeout: Int
   protected val baseUrl: URI
   protected val apiToken: String
   protected val apiVersion: String
 
-  protected def http(method: String, uri: URI, body: String = null, headers: Map[String, String] = Map.empty[String, String]): Try[HttpResponse[Array[Byte]]] = Try {
+  private def http(method: String, uri: URI, body: String = null, headers: Map[String, String] = Map.empty[String, String]): Try[HttpResponse[Array[Byte]]] = Try {
     {
       if (body == null) Http(uri.toASCIIString)
       else Http(uri.toASCIIString).postData(body)
@@ -65,16 +62,10 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       _ = debug(s"Request URL = $uri")
       response <- httpPostMulti(uri, file, optJsonMetadata, Map("X-Dataverse-key" -> apiToken))
       _ = debug(s"response: ${ response.statusLine }, ${ new String(response.body, StandardCharsets.UTF_8) }")
-      body <- handleResponse(response, expectedStatus)
-      _ <- if (formatResponseAsJson) prettyPrintJson(new String(body))
-                else Try(new String(body))
     } yield response
   }
 
-  /*
- * Helpers
- */
-  protected def get(subPath: String = null, formatResponseAsJson: Boolean = true): Try[HttpResponse[Array[Byte]]] = {
+  protected def get(subPath: String = null): Try[HttpResponse[Array[Byte]]] = {
     for {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
@@ -82,21 +73,19 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     } yield response
   }
 
-  protected def postJson(subPath: String = null)(expectedStatus: Int*)(body: String = null): Try[HttpResponse[Array[Byte]]] = {
+  protected def postJson(subPath: String = null)(body: String = null): Try[HttpResponse[Array[Byte]]] = {
     for {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
       response <- http("POST", uri, body, Map("Content-Type" -> "application/json", "X-Dataverse-key" -> apiToken))
-      _ <- handleResponse(response, expectedStatus: _*)
     } yield response
   }
 
-  protected def postText(subPath: String = null)(expectedStatus: Int*)(body: String = null): Try[HttpResponse[Array[Byte]]] = {
+  protected def postText(subPath: String = null)(body: String = null): Try[HttpResponse[Array[Byte]]] = {
     for {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
       response <- http("POST", uri, body, Map("Content-Type" -> "text/plain", "X-Dataverse-key" -> apiToken))
-      _ <- handleResponse(response, expectedStatus: _*)
     } yield response
   }
 
@@ -105,7 +94,6 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
       response <- http("PUT", uri, body, Map("X-Dataverse-key" -> apiToken))
-      _ <- handleResponse(response, 200)
     } yield response
   }
 
@@ -114,25 +102,15 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
       response <- http("DELETE", uri, null, Map("X-Dataverse-key" -> apiToken))
-      _ <- handleResponse(response, 200)
     } yield response
   }
 
-  protected def tryReadFileToString(file: File): Try[String] = Try {
-    FileUtils.readFileToString(file.toJava, StandardCharsets.UTF_8)
-  }
 
-  protected def handleResponse(response: HttpResponse[Array[Byte]], expectedStatus: Int*): Try[Array[Byte]] = {
-    trace(expectedStatus)
-    if (!expectedStatus.contains(response.code)) Failure(RequestFailedException(response.code, response.statusLine, new String(response.body)))
-    else Success(response.body)
-  }
-
-  protected def prettyPrintJson(json: String): Try[String] = Try {
-    trace(())
-    Serialization.writePretty(JsonParser.parse(json))
-  }
-
+  //  protected def prettyPrintJson(json: String): Try[String] = Try {
+  //    trace(())
+  //    Serialization.writePretty(JsonParser.parse(json))
+  //  }
+  //
   def uri(s: String): Try[URI] = Try {
     baseUrl resolve s
   }

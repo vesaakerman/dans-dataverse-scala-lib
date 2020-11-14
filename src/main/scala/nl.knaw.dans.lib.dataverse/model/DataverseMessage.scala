@@ -41,7 +41,7 @@ case class DataverseMessage[P](status: String, data: P)
 object DataverseMessage {
 
   /**
-   * Constructs a [[DataverseMessage]] that contains an error. The `message` field content is put in the `data` field of the `DataverseMessage` object.
+   * Constructs a [[DataverseMessage]] that contains an error message from Dataverse. The `message` field content is put in the `data` field of the `DataverseMessage` object.
    *
    * @param status  the status (which will be `ERROR`)
    * @param message the error message
@@ -52,30 +52,7 @@ object DataverseMessage {
   }
 }
 
-/**
- * @see [[Dataverse#view]]
- * @param id            the internal database ID of the dataverse
- * @param alias         the dataverse alias
- * @param name          the display name
- * @param permissionRoot
- * @param description   the description of the dataverse
- * @param dataverseType the category of dataverse (journal, department, etc)
- * @param creationDate  the timestamp of creation
- *
- */
-case class DataverseSummary(id: Int, alias: String, name: String, permissionRoot: Boolean, description: String, dataverseType: String, creationDate: String)
 
-/**
- *
- *
- *
- * @param id
- * @param assignee
- * @param roleId
- * @param _roleAlias
- * @param definitionPointId
- */
-case class RoleAssignment(id: Int, assignee: String, roleId: Int, _roleAlias: String, definitionPointId: Int)
 
 
 

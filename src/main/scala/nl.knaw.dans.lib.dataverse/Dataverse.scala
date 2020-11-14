@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.lib.dataverse
 
-import java.io.PrintStream
 import java.net.URI
 
 import better.files.File
@@ -24,7 +23,7 @@ import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class Dataverse private[dataverse] (dvId: String, configuration: DataverseInstanceConfig)(implicit resultOutput: PrintStream) extends HttpSupport with DebugEnhancedLogging {
+class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
   trace(dvId)
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
@@ -32,12 +31,9 @@ class Dataverse private[dataverse] (dvId: String, configuration: DataverseInstan
   protected val apiToken: String = configuration.apiToken
   protected val apiVersion: String = configuration.apiVersion
 
-  /*
-   * Operations
-   */
   def create(jsonDef: File): Try[HttpResponse[Array[Byte]]] = {
     trace(jsonDef)
-    tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId")(201))
+    tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId"))
   }
 
   def view(): Try[HttpResponse[Array[Byte]]] = {
@@ -62,7 +58,7 @@ class Dataverse private[dataverse] (dvId: String, configuration: DataverseInstan
 
   def createRole(jsonDef: File): Try[HttpResponse[Array[Byte]]] = {
     trace(jsonDef)
-    tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId/roles")(200))
+    tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId/roles"))
   }
 
   def listFacets(): Try[HttpResponse[Array[Byte]]] = {
@@ -72,7 +68,7 @@ class Dataverse private[dataverse] (dvId: String, configuration: DataverseInstan
 
   def setFacets(facets: Seq[String]): Try[HttpResponse[Array[Byte]]] = {
     trace(facets)
-    postJson(s"dataverses/$dvId/facets")(200)(facets.map(s => s""""$s"""").mkString("[", ",", "]"))
+    postJson(s"dataverses/$dvId/facets")(facets.map(s => s""""$s"""").mkString("[", ",", "]"))
   }
 
   def listRoleAssignments(): Try[HttpResponse[Array[Byte]]] = {
@@ -88,7 +84,7 @@ class Dataverse private[dataverse] (dvId: String, configuration: DataverseInstan
 
   def assignRole(jsonDef: File): Try[HttpResponse[Array[Byte]]] = {
     trace(jsonDef)
-    tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId/assignments")(200))
+    tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId/assignments"))
   }
 
   def unassignRole(assignmentId: String): Try[HttpResponse[Array[Byte]]] = {
@@ -103,7 +99,7 @@ class Dataverse private[dataverse] (dvId: String, configuration: DataverseInstan
 
   def setMetadataBlocks(mdBlockIds: Seq[String]): Try[HttpResponse[Array[Byte]]] = {
     trace(mdBlockIds)
-    postJson(s"dataverses/$dvId/metadatablocks")(200)(mdBlockIds.map(s => s""""$s"""").mkString("[", ",", "]"))
+    postJson(s"dataverses/$dvId/metadatablocks")(mdBlockIds.map(s => s""""$s"""").mkString("[", ",", "]"))
   }
 
   def isMetadataBlocksRoot: Try[HttpResponse[Array[Byte]]] = {
@@ -118,12 +114,12 @@ class Dataverse private[dataverse] (dvId: String, configuration: DataverseInstan
 
   def createDataset(json: File): Try[HttpResponse[Array[Byte]]] = {
     trace(json)
-    tryReadFileToString(json).flatMap(postJson(s"dataverses/$dvId/datasets")(201))
+    tryReadFileToString(json).flatMap(postJson(s"dataverses/$dvId/datasets"))
   }
 
   def createDataset(json: String): Try[HttpResponse[Array[Byte]]] = {
     trace(json)
-    postJson(s"dataverses/$dvId/datasets")(201)(json)
+    postJson(s"dataverses/$dvId/datasets")(json)
   }
 
   def importDataset(json: String, isDdi: Boolean = false, pid: String, keepOnDraft: Boolean = false): Try[HttpResponse[Array[Byte]]] = {
@@ -131,11 +127,11 @@ class Dataverse private[dataverse] (dvId: String, configuration: DataverseInstan
     postJson(s"dataverses/$dvId/datasets/:import${
       if (isDdi) "ddi"
       else ""
-    }?pid=$pid&release=${ !keepOnDraft }")(201)(json)
+    }?pid=$pid&release=${ !keepOnDraft }")(json)
   }
 
   def publish(): Try[HttpResponse[Array[Byte]]] = {
     trace(())
-    postJson(s"dataverses/$dvId/actions/:publish")(200)()
+    postJson(s"dataverses/$dvId/actions/:publish")()
   }
 }

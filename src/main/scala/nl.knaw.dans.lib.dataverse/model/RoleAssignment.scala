@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib
+package nl.knaw.dans.lib.dataverse.model
 
-import java.nio.charset.StandardCharsets
-
-import better.files.File
-import org.apache.commons.io.FileUtils
-
-import scala.util.Try
-
-package object dataverse {
-  case class RequestFailedException(status: Int, msg: String, body: String) extends Exception(s"Command could not be executed. Server returned: status line: '$msg', body: '$body'")
-
-
-  def tryReadFileToString(file: File): Try[String] = Try {
-    FileUtils.readFileToString(file.toJava, StandardCharsets.UTF_8)
-  }
-
-
-}
+/**
+ *
+ *
+ *
+ * @param id
+ * @param assignee
+ * @param roleId
+ * @param _roleAlias
+ * @param definitionPointId
+ */
+case class RoleAssignment(id: Int, assignee: String, roleId: Int, _roleAlias: String, definitionPointId: Int)

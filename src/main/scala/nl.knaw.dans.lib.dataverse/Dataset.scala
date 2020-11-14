@@ -21,13 +21,13 @@ import better.files.File
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scalaj.http.HttpResponse
 
-import scala.util.{ Failure, Try }
+import scala.util.Try
 
 /**
- *  Functions that operate on a single dataset. See [[https://guides.dataverse.org/en/latest/api/native-api.html#datasets]].
+ * Functions that operate on a single dataset. See [[https://guides.dataverse.org/en/latest/api/native-api.html#datasets]].
  *
  */
-class Dataset private[dataverse] (id: String, isPersistentId: Boolean, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+class Dataset private[dataverse](id: String, isPersistentId: Boolean, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
@@ -58,11 +58,11 @@ class Dataset private[dataverse] (id: String, isPersistentId: Boolean, configura
     else get(s"datasets/$id/versions")
   }
 
-  def exportMetadataTo(format: String): Try[HttpResponse[Array[Byte]]] = {
-    trace(format)
-    if (isPersistentId) get(s"datasets/export?persistentId=$id&exporter=$format", formatResponseAsJson = false)
-    else Failure(RequestFailedException(501, "Export to metadata is only supported using persistent identifiers. Use the -p option", null))
-  }
+  //  def exportMetadataTo(format: String): Try[HttpResponse[Array[Byte]]] = {
+  //    trace(format)
+  //    if (isPersistentId) get(s"datasets/export?persistentId=$id&exporter=$format", formatResponseAsJson = false)
+  //    else Failure(RequestFailedException(501, "Export to metadata is only supported using persistent identifiers. Use the -p option", null))
+  //  }
 
   def listFiles(version: Option[String] = None): Try[HttpResponse[Array[Byte]]] = {
     trace(version)
@@ -111,7 +111,7 @@ class Dataset private[dataverse] (id: String, isPersistentId: Boolean, configura
     trace(updateType)
     val path = if (isPersistentId) s"datasets/:persistentId/actions/:publish/?persistentId=$id&type=$updateType"
                else s"datasets/$id/actions/:publish?type=$updateType"
-    postJson(path)(200, 202)(null)
+    postJson(path)(null)
   }
 
   def deleteDraft(): Try[HttpResponse[Array[Byte]]] = {
@@ -146,7 +146,7 @@ class Dataset private[dataverse] (id: String, isPersistentId: Boolean, configura
     trace(())
     val path = if (isPersistentId) s"datasets/:persistentId/privateUrl?persistentId=$id"
                else s"datasets/$id/privateUrl"
-    postJson(path)(201)(null)
+    postJson(path)(null)
   }
 
   def getPrivateUrl: Try[HttpResponse[Array[Byte]]] = {
@@ -181,14 +181,14 @@ class Dataset private[dataverse] (id: String, isPersistentId: Boolean, configura
     trace(())
     val path = if (isPersistentId) s"datasets/:persistentId/submitForReview?persistentId=$id"
                else s"datasets/$id/submitForReview"
-    postJson(path)(200)(null)
+    postJson(path)(null)
   }
 
   def returnToAuthor(reason: String): Try[HttpResponse[Array[Byte]]] = {
     trace(reason)
     val path = if (isPersistentId) s"datasets/:persistentId/returnToAuthor?persistentId=$id"
                else s"datasets/$id/returnToAuthor"
-    postJson(path)(200)(s"""{"reasonForReturn": "$reason"}""")
+    postJson(path)(s"""{"reasonForReturn": "$reason"}""")
   }
 
   def link(dataverseAlias: String): Try[HttpResponse[Array[Byte]]] = {

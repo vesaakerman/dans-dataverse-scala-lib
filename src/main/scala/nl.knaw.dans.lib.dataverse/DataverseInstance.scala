@@ -15,13 +15,11 @@
  */
 package nl.knaw.dans.lib.dataverse
 
-import java.io.PrintStream
-
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.util.Try
 
-class DataverseInstance(config: DataverseInstanceConfig)(implicit resultOutputStream: PrintStream) extends DebugEnhancedLogging {
+class DataverseInstance(config: DataverseInstanceConfig) extends DebugEnhancedLogging {
   def checkConnection(): Try[Unit] = {
     logger.info("Checking if root dataverse can be reached...")
     dataverse("root").view().map {

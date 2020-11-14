@@ -22,7 +22,7 @@ import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class Workflows private[dataverse] (configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+class Workflows private[dataverse](configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
@@ -30,6 +30,6 @@ class Workflows private[dataverse] (configuration: DataverseInstanceConfig) exte
   protected val apiVersion: String = configuration.apiVersion
 
   def resume(invocationId: String): Try[HttpResponse[Array[Byte]]] = {
-    postText(s"workflows/$invocationId")(expectedStatus = 200)(body = "")
+    postText(s"workflows/$invocationId")(body = "")
   }
 }

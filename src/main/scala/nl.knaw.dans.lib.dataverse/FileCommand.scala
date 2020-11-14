@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.lib.dataverse
 
-import java.io.PrintStream
 import java.net.URI
 
 import better.files.File
@@ -24,7 +23,7 @@ import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class FileCommand private[dataverse] (id: String, isPersistentId: Boolean, configuration: DataverseInstanceConfig)(implicit resultOutput: PrintStream) extends HttpSupport with DebugEnhancedLogging {
+class FileCommand private[dataverse](id: String, isPersistentId: Boolean, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
@@ -56,14 +55,14 @@ class FileCommand private[dataverse] (id: String, isPersistentId: Boolean, confi
     trace(())
     val path = if (isPersistentId) s"files/:persistentId/uningest?persistentId=$id"
                else s"files/$id/uningest"
-    postJson(path)(200)()
+    postJson(path)()
   }
 
   def reingest(): Try[HttpResponse[Array[Byte]]] = {
     trace(())
     val path = if (isPersistentId) s"files/:persistentId/reingest?persistentId=$id"
                else s"files/$id/reingest"
-    postJson(path)(200)()
+    postJson(path)()
   }
 
   def getProvenance(inJsonFormat: Boolean): Try[HttpResponse[Array[Byte]]] = {
@@ -76,7 +75,7 @@ class FileCommand private[dataverse] (id: String, isPersistentId: Boolean, confi
                  if (inJsonFormat) "json"
                  else "freeform"
                }"
-    get(path, formatResponseAsJson = inJsonFormat)
+    get(path)
   }
 
   def setProvenacne(prov: String, inJsonFormat: Boolean): Try[HttpResponse[Array[Byte]]] = {
@@ -90,7 +89,7 @@ class FileCommand private[dataverse] (id: String, isPersistentId: Boolean, confi
                  else "freeform"
                }"
 
-    if (inJsonFormat) postJson(path)(201)(prov)
-    else postText(path)(201)(prov)
+    if (inJsonFormat) postJson(path)(prov)
+    else postText(path)(prov)
   }
 }
