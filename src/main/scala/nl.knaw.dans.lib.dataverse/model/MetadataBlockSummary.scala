@@ -15,8 +15,4 @@
  */
 package nl.knaw.dans.lib.dataverse.model
 
-case class RoleAssignmentReadOnly private(id: Option[Int],
-                                          assignee: String,
-                                          roleId: Int,
-                                          _roleAlias: String,
-                                          definitionPointId: Int)
+case class MetadataBlockSummary(id: Int, name: String, displayName: String)

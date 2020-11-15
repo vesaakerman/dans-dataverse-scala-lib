@@ -19,7 +19,7 @@ import java.net.URI
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DefaultRole.DefaultRole
-import nl.knaw.dans.lib.dataverse.model.{ DataMessage, DataverseItem, Role, RoleAssignment, RoleAssignmentReadOnly }
+import nl.knaw.dans.lib.dataverse.model.{ DataMessage, DataverseItem, MetadataBlockSummary, Role, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scalaj.http.HttpResponse
 
@@ -198,40 +198,66 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     put2[DataMessage](s"dataverses/$dvId/defaultContributorRole/$role")(null)
   }
 
-  def assignRole(jsonDef: File): Try[HttpResponse[Array[Byte]]] = {
-    trace(jsonDef)
-    tryReadFileToString(jsonDef).flatMap(postJson(s"dataverses/$dvId/assignments"))
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#assign-a-new-role-on-a-dataverse]]
+   *
+   * @param jsonFile file containing the role assignment JSON object
+   * @return
+   */
+  def assignRole(jsonFile: File): Try[DataverseResponse[RoleAssignmentReadOnly]] = {
+    trace(jsonFile)
+    tryReadFileToString(jsonFile).flatMap(postJson2[RoleAssignmentReadOnly](s"dataverses/$dvId/assignments"))
   }
 
   /**
-   * 
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#assign-a-new-role-on-a-dataverse]]
    *
-   * @param roleAssignment
+   * @param roleAssignment object describing the assignment
    * @return
    */
-  def assignRole(roleAssignment: RoleAssignment): Try[DataverseResponse[Any]] = {
+  def assignRole(roleAssignment: RoleAssignment): Try[DataverseResponse[RoleAssignmentReadOnly]] = {
     trace(roleAssignment)
     for {
       jsonString <- serializeAsJson(roleAssignment, logger.underlying.isDebugEnabled)
-      response <- postJson2[Any](s"dataverses/$dvId/asignments")(jsonString)
+      response <- postJson2[RoleAssignmentReadOnly](s"dataverses/$dvId/assignments")(jsonString)
     } yield response
   }
 
-
-
-  def unassignRole(assignmentId: String): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * Use [[Dataverse#listRoleAssignments]] to get the ID.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-role-assignment-from-a-dataverse]]
+   *
+   * @param assignmentId the ID of the assignment to delete
+   * @return
+   */
+  def deleteRoleAssignment(assignmentId: Int): Try[DataverseResponse[DataMessage]] = {
     trace(assignmentId)
-    deletePath(s"dataverses/$dvId/assignments/$assignmentId")
+    deletePath2[DataMessage](s"dataverses/$dvId/assignments/$assignmentId")
   }
 
-  def listMetadataBocks(): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-metadata-blocks-defined-on-a-dataverse]]
+   *
+   * @return
+   */
+  def listMetadataBocks(): Try[DataverseResponse[List[MetadataBlockSummary]]] = {
     trace(())
-    get(s"dataverses/$dvId/metadatablocks")
+    get2[List[MetadataBlockSummary]](s"dataverses/$dvId/metadatablocks")
   }
 
-  def setMetadataBlocks(mdBlockIds: Seq[String]): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#define-metadata-blocks-for-a-dataverse]]
+   *
+   * @param mdBlockIds list of metadata block IDs
+   * @return
+   */
+  def setMetadataBlocks(mdBlockIds: List[String]): Try[DataverseResponse[DataMessage]] = {
     trace(mdBlockIds)
-    postJson(s"dataverses/$dvId/metadatablocks")(mdBlockIds.map(s => s""""$s"""").mkString("[", ",", "]"))
+    for {
+      jsonString <- serializeAsJson(mdBlockIds, logger.underlying.isDebugEnabled)
+      response <- postJson2[DataMessage](s"dataverses/$dvId/metadatablocks")(jsonString)
+    } yield response
   }
 
   def isMetadataBlocksRoot: Try[HttpResponse[Array[Byte]]] = {
