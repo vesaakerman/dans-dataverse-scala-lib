@@ -13,26 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib.dataverse
+package nl.knaw.dans.lib.dataverse.model.dataset
 
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock
-
-/**
- * Classes that model the JSON objects that Dataverse produces and consumes.
- *
- * TODO: add few simple examples.
- */
-package object model {
-
-
-  /**
-   * Enumeration of the default roles that can be assigned.
-   *
-   * Note: if you are using the API directly, the role names are all lowercase.
-   */
-  object DefaultRole extends Enumeration {
-    type DefaultRole = Value
-    val curator, contributor, none = Value
-  }
-}
-
+case class DataverseFile(description: Option[String] = None,
+                         directoryLabel: Option[String] = None,
+                         restrict: Option[String] = Some("true"),
+                         categories: List[String] = List.empty[String])

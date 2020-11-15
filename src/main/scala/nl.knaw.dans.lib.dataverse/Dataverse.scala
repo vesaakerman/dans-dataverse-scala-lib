@@ -260,15 +260,39 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     } yield response
   }
 
-  def isMetadataBlocksRoot: Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#determine-if-a-dataverse-inherits-its-metadata-blocks-from-its-parent]]
+   *
+   * @return
+   */
+  def isMetadataBlocksRoot: Try[DataverseResponse[Boolean]] = {
     trace(())
-    get(s"dataverses/$dvId/metadatablocks/isRoot")
+    get2[Boolean](s"dataverses/$dvId/metadatablocks/isRoot")
   }
 
-  def setMetadataBlocksRoot(isRoot: Boolean): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#configure-a-dataverse-to-inherit-its-metadata-blocks-from-its-parent]]
+   *
+   * @param isRoot whether to make the dataverse a metadata root
+   * @return
+   */
+  def setMetadataBlocksRoot(isRoot: Boolean): Try[DataverseResponse[DataMessage]] = {
     trace(isRoot)
-    put(s"dataverses/$dvId/metadatablocks/isRoot")(isRoot.toString.toLowerCase)
+    for {
+      jsonString <- serializeAsJson(isRoot, logger.underlying.isDebugEnabled)
+      response <- put2[DataMessage](s"dataverses/$dvId/metadatablocks/isRoot")(jsonString)
+    } yield response
   }
+
+
+  def createDataset(isRoot: Boolean): Try[DataverseResponse[DataMessage]] = {
+    trace(isRoot)
+    for {
+      jsonString <- serializeAsJson(isRoot, logger.underlying.isDebugEnabled)
+      response <- put2[DataMessage](s"dataverses/$dvId/metadatablocks/isRoot")(jsonString)
+    } yield response
+  }
+
 
   def createDataset(json: File): Try[HttpResponse[Array[Byte]]] = {
     trace(json)
