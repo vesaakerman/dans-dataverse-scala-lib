@@ -38,4 +38,14 @@ class CompoundFieldBuilderSpec extends AnyFlatSpec with Matchers with DebugEnhan
     val name = "myCompoundField"
     getJson(CompoundFieldBuilder(name).build()) \ "typeName" shouldBe JString(name)
   }
+
+  it should "produce list with one value if one was added" in {
+    val json = getJson(CompoundFieldBuilder("myCompoundField")
+      .withSingleValueField("field1", "value1")
+      .build())
+
+    // TODO: add check
+  }
+
+  // TODO: add more tests. First read https://github.com/json4s/json4s to find efficient queries of JSON
 }

@@ -19,7 +19,8 @@ import java.net.URI
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DefaultRole.DefaultRole
-import nl.knaw.dans.lib.dataverse.model.{ DataMessage, DataverseItem, MetadataBlockSummary, Role, RoleAssignment, RoleAssignmentReadOnly }
+import nl.knaw.dans.lib.dataverse.model._
+import nl.knaw.dans.lib.dataverse.model.dataset.DatasetCreationResult
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scalaj.http.HttpResponse
 
@@ -175,7 +176,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    * List all the role assignments at the given dataverse.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-role-assignments-in-a-dataverse]]
-   *
    * @return
    */
   def listRoleAssignments(): Try[DataverseResponse[List[RoleAssignmentReadOnly]]] = {
@@ -189,7 +189,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    * Note: there does not seem to be a way to retrieve the current default role via the API.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#assign-default-role-to-user-creating-a-dataset-in-a-dataverse]]
-   *
    * @param role the role to assign
    * @return
    */
@@ -200,7 +199,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#assign-a-new-role-on-a-dataverse]]
-   *
    * @param jsonFile file containing the role assignment JSON object
    * @return
    */
@@ -211,7 +209,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#assign-a-new-role-on-a-dataverse]]
-   *
    * @param roleAssignment object describing the assignment
    * @return
    */
@@ -227,7 +224,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    * Use [[Dataverse#listRoleAssignments]] to get the ID.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-role-assignment-from-a-dataverse]]
-   *
    * @param assignmentId the ID of the assignment to delete
    * @return
    */
@@ -238,7 +234,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-metadata-blocks-defined-on-a-dataverse]]
-   *
    * @return
    */
   def listMetadataBocks(): Try[DataverseResponse[List[MetadataBlockSummary]]] = {
@@ -248,7 +243,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#define-metadata-blocks-for-a-dataverse]]
-   *
    * @param mdBlockIds list of metadata block IDs
    * @return
    */
@@ -262,7 +256,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#determine-if-a-dataverse-inherits-its-metadata-blocks-from-its-parent]]
-   *
    * @return
    */
   def isMetadataBlocksRoot: Try[DataverseResponse[Boolean]] = {
@@ -272,7 +265,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#configure-a-dataverse-to-inherit-its-metadata-blocks-from-its-parent]]
-   *
    * @param isRoot whether to make the dataverse a metadata root
    * @return
    */
@@ -284,36 +276,65 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     } yield response
   }
 
-
-  def createDataset(isRoot: Boolean): Try[DataverseResponse[DataMessage]] = {
-    trace(isRoot)
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-dataset-in-a-dataverse]]
+   * @param dataset model object defining the dataset
+   * @return
+   */
+  def createDataset(dataset: model.dataset.Dataset): Try[DataverseResponse[DatasetCreationResult]] = {
+    trace(dataset)
     for {
-      jsonString <- serializeAsJson(isRoot, logger.underlying.isDebugEnabled)
-      response <- put2[DataMessage](s"dataverses/$dvId/metadatablocks/isRoot")(jsonString)
+      jsonString <- serializeAsJson(dataset, logger.underlying.isDebugEnabled)
+      response <- postJson2[DatasetCreationResult](s"dataverses/$dvId/datasets")(jsonString)
     } yield response
   }
 
-
-  def createDataset(json: File): Try[HttpResponse[Array[Byte]]] = {
-    trace(json)
-    tryReadFileToString(json).flatMap(postJson(s"dataverses/$dvId/datasets"))
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-dataset-in-a-dataverse]]
+   * @param jsonFile JSON file defining the dataset
+   * @return
+   */
+  def createDataset(jsonFile: File): Try[DataverseResponse[DatasetCreationResult]] = {
+    trace(jsonFile)
+    tryReadFileToString(jsonFile).flatMap(postJson2[DatasetCreationResult](s"dataverses/$dvId/datasets"))
   }
 
-  def createDataset(json: String): Try[HttpResponse[Array[Byte]]] = {
-    trace(json)
-    postJson(s"dataverses/$dvId/datasets")(json)
+  /**
+   * Import a dataset with an existing persistent identifier.
+   *
+   * @param dataset     model object defining the dataset
+   * @param autoPublish immediately publish dataset after publication
+   * @return
+   */
+  def importDataset(dataset: model.dataset.Dataset, autoPublish: Boolean = false): Try[DataverseResponse[DatasetCreationResult]] = {
+    trace(dataset, autoPublish)
+    for {
+      pid <- getPid(dataset)
+      _ = debug(s"Found pid = $pid")
+      jsonString <- serializeAsJson(dataset, logger.underlying.isDebugEnabled)
+      response <- postJson2[DatasetCreationResult](s"dataverses/$dvId/datasets/:import?pid=$pid&release=$autoPublish")(jsonString)
+    } yield response
   }
 
-  def importDataset(json: String, isDdi: Boolean = false, pid: String, keepOnDraft: Boolean = false): Try[HttpResponse[Array[Byte]]] = {
-    trace(json)
-    postJson(s"dataverses/$dvId/datasets/:import${
-      if (isDdi) "ddi"
-      else ""
-    }?pid=$pid&release=${ !keepOnDraft }")(json)
+  private def getPid(dataset: model.dataset.Dataset): Try[String] = Try {
+    if (dataset.datasetVersion.protocol.isEmpty
+      || dataset.datasetVersion.authority.isEmpty
+      || dataset.datasetVersion.identifier.isEmpty) throw new IllegalArgumentException("Dataset object does not contain protocol, authority or identifier fields.")
+    else s"${ dataset.datasetVersion.protocol.get }:${ dataset.datasetVersion.authority.get }/${ dataset.datasetVersion.identifier.get }"
   }
 
-  def publish(): Try[HttpResponse[Array[Byte]]] = {
+  // TODO: importDataset(jsonFile)
+  // TODO: importDataset(ddiFile)
+
+  /**
+   * Publishes a dataverse.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#publish-a-dataverse]]
+   *
+   * @return
+   */
+  def publish(): Try[DataverseResponse[DataverseSummary]] = {
     trace(())
-    postJson(s"dataverses/$dvId/actions/:publish")()
+    postJson2[DataverseSummary](s"dataverses/$dvId/actions/:publish")()
   }
 }

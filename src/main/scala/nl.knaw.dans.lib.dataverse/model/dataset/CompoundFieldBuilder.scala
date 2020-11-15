@@ -49,6 +49,8 @@ case class CompoundFieldBuilder(id: String, multipleValues: Boolean = true) {
   }
 
   def build(): CompoundField = {
+    if(fields.nonEmpty) addValue()
+    if(!multipleValues && values.size > 1) throw new IllegalStateException("Single-value field with more than one value")
     CompoundField(
       typeName = id,
       multiple = multipleValues,

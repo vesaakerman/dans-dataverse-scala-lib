@@ -15,9 +15,4 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-case class DatasetVersion(termsOfUse: Option[String] = None,
-                          license: Option[String] = None,
-                          protocol: Option[String] = None,
-                          authority: Option[String] = None,
-                          identifier: Option[String] = None,
-                          metadataBlocks: MetadataBlocks)
+case class DatasetCreationResult(id: Int, persistentId: String)
