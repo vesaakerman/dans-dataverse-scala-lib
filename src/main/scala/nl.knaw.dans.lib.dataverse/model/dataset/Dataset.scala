@@ -17,6 +17,8 @@ package nl.knaw.dans.lib.dataverse.model.dataset
 
 case class Dataset(datasetVersion: DatasetVersion)
 
+case class DatasetLatestVersion(latestVersion: DatasetVersion)
+
 
 
 

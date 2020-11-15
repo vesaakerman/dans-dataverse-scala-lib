@@ -46,6 +46,12 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     else get(s"datasets/$id/${ version.map(v => s"versions/$v/").getOrElse("") }")
   }
 
+  def view2(version: Option[String] = None): Try[DataverseResponse[model.dataset.DatasetLatestVersion]] = {
+    trace(version)
+    if (isPersistentId) get2[model.dataset.DatasetLatestVersion](s"datasets/:persistentId/${ version.map(v => s"versions/$v/").getOrElse("") }?persistentId=$id")
+    else get2[model.dataset.DatasetLatestVersion](s"datasets/$id/${ version.map(v => s"versions/$v/").getOrElse("") }")
+  }
+
   def delete(): Try[HttpResponse[Array[Byte]]] = {
     trace(())
     if (isPersistentId) deletePath(s"datasets/:persistentId/?persistentId=$id")

@@ -15,4 +15,4 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-abstract class Field
+trait Field

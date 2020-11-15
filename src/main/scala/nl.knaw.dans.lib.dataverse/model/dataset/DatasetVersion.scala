@@ -15,7 +15,15 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-case class DatasetVersion(termsOfUse: Option[String] = None,
+case class DatasetVersion(id: Option[Int] = None,
+                          datasetId: Option[Int] = None,
+                          datasetPersistentId: Option[String] = None,
+                          storageIdentifier: Option[String] = None,
+                          versionState: Option[String] = None,
+                          lastUpdateTime: Option[String] = None,
+                          createTime: Option[String] = None,
+                          fileAccessRequest: Option[Boolean] = None,
+                          termsOfUse: Option[String] = None,
                           license: Option[String] = None,
                           protocol: Option[String] = None,
                           authority: Option[String] = None,
