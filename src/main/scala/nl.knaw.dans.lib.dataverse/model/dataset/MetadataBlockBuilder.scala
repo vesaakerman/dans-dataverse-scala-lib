@@ -19,29 +19,29 @@ import scala.collection.mutable
 
 case class MetadataBlockBuilder(displayName: String) {
   private type FieldId = String
-  private val fields = mutable.ListBuffer[Field]()
+  private val fields = mutable.ListBuffer[MetadataField]()
 
   def withSingleValueField(fieldId: FieldId, value: String): MetadataBlockBuilder = {
-    fields.append(PrimitiveFieldSingleValue(fieldId, multiple = false, "primitive", value))
+    fields.append(Map("typeClass" -> "primitive", "typeName" -> fieldId, "multiple" -> false, "value" -> value))
     this
   }
 
   def withMultiValueField(fieldId: FieldId, values: List[String]): MetadataBlockBuilder = {
-    fields.append(PrimitiveFieldMultipleValues(fieldId, multiple = true, "primitive", values))
+    fields.append(Map("typeClass" -> "primitive", "typeName" -> fieldId, "multiple" -> true, "value" -> values))
     this
   }
 
   def withControlledSingleValueField(fieldId: FieldId, value: String): MetadataBlockBuilder = {
-    fields.append(PrimitiveFieldSingleValue(fieldId, multiple = false, "controlledVocabulary", value))
+    fields.append(Map("typeClass" -> "primitive", "typeName" -> fieldId, "controlledVocabulary" -> false, "value" -> value))
     this
   }
 
   def withControlledMultiValueField(fieldId: FieldId, values: List[String]): MetadataBlockBuilder = {
-    fields.append(PrimitiveFieldMultipleValues(fieldId, multiple = true, "controlledVocabulary", values))
+    fields.append(Map("typeClass" -> "primitive", "typeName" -> fieldId, "controlledVocabulary" -> true, "value" -> values))
     this
   }
 
-  def withCompoundField(compoundField: CompoundField): MetadataBlockBuilder = {
+  def withCompoundField(compoundField: MetadataField): MetadataBlockBuilder = {
     fields.append(compoundField)
     this
   }

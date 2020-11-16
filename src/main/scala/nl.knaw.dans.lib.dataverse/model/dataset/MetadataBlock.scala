@@ -16,4 +16,4 @@
 package nl.knaw.dans.lib.dataverse.model.dataset
 
 case class MetadataBlock(displayName: String,
-                         fields: List[Field])
+                         fields: List[MetadataField])

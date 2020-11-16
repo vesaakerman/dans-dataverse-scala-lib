@@ -19,26 +19,26 @@ import scala.collection.mutable
 
 case class CompoundFieldBuilder(id: String, multipleValues: Boolean = true) {
   private type FieldId = String
-  private val fields = mutable.ListBuffer[(FieldId, Field)]()
-  private val values = mutable.ListBuffer[Map[FieldId, Field]]()
+  private val fields = mutable.ListBuffer[(FieldId, MetadataField)]()
+  private val values = mutable.ListBuffer[Map[FieldId, MetadataField]]()
 
   def withSingleValueField(fieldId: FieldId, value: String): CompoundFieldBuilder = {
-    fields.append((fieldId, PrimitiveFieldSingleValue(fieldId, multiple = false, "primitive", value)))
+    fields.append((fieldId, Map("typeName" -> fieldId, "multiple" -> false, "typeClass" -> "primitive", "value" -> value)))
     this
   }
 
   def withMultiValueField(fieldId: FieldId, values: List[String]): CompoundFieldBuilder = {
-    fields.append((fieldId, PrimitiveFieldMultipleValues(fieldId, multiple = true, "primitive", values)))
+    fields.append((fieldId, Map("typeName" -> fieldId, "multiple" -> true, "typeClass" -> "primitive", "value" -> values)))
     this
   }
 
   def withControlledSingleValueField(fieldId: FieldId, value: String): CompoundFieldBuilder = {
-    fields.append((fieldId, PrimitiveFieldSingleValue(fieldId, multiple = false, "controlledVocabulary", value)))
+    fields.append((fieldId, Map("typeName" -> fieldId, "multiple" -> false, "typeClass" -> "controlledVocabulary", "value" -> value)))
     this
   }
 
   def withControlledMultiValueField(fieldId: FieldId, values: List[String]): CompoundFieldBuilder = {
-    fields.append((fieldId, PrimitiveFieldMultipleValues(fieldId, multiple = true, "controlledVocabulary", values)))
+    fields.append((fieldId, Map("typeName" -> fieldId, "multiple" -> true, "typeClass" -> "controlledVocabulary", "value" -> values)))
     this
   }
 
@@ -48,13 +48,14 @@ case class CompoundFieldBuilder(id: String, multipleValues: Boolean = true) {
     this
   }
 
-  def build(): CompoundField = {
-    if(fields.nonEmpty) addValue()
-    if(!multipleValues && values.size > 1) throw new IllegalStateException("Single-value field with more than one value")
-    CompoundField(
-      typeName = id,
-      multiple = multipleValues,
-      value = values.toList
+  def build(): MetadataField = {
+    if (fields.nonEmpty) addValue()
+    if (!multipleValues && values.size > 1) throw new IllegalStateException("Single-value field with more than one value")
+    Map(
+      "typeClass" -> "compound",
+      "typeName" -> id,
+      "multiple" -> multipleValues,
+      "value" -> values.toList
     )
   }
 }

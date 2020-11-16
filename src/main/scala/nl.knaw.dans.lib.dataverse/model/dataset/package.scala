@@ -17,4 +17,6 @@ package nl.knaw.dans.lib.dataverse.model
 
 package object dataset {
   type MetadataBlocks = Map[String, MetadataBlock]
+
+  type MetadataField = Map[String, Any]
 }
