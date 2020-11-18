@@ -52,6 +52,12 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     else get(s"datasets/$id/versions")
   }
 
+  def exportMetadata(format: String): Try[DataverseResponse[Any]] = {
+    trace(())
+    get2[Any](s"datasets/export/?exporter=$format&persistentId=$id")
+  }
+
+
   //  def exportMetadataTo(format: String): Try[HttpResponse[Array[Byte]]] = {
   //    trace(format)
   //    if (isPersistentId) get(s"datasets/export?persistentId=$id&exporter=$format", formatResponseAsJson = false)

@@ -91,6 +91,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   protected def get2[P: Manifest](subPath: String = null): Try[DataverseResponse[P]] = {
     for {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
+      _ = println(s"Request URL = $uri")
       _ = debug(s"Request URL = $uri")
       response <- http2[P]("GET", uri, body = null, Map("X-Dataverse-key" -> apiToken))
     } yield response

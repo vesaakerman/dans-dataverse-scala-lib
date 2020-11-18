@@ -24,7 +24,7 @@ import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class DataverseResponse[P: Manifest](httpResponse: HttpResponse[Array[Byte]]) {
+case class DataverseResponse[P: Manifest](httpResponse: HttpResponse[Array[Byte]]) {
   private implicit val jsonFormats: Formats = new DefaultFormats {}
 
   def string: Try[String] = Try {
