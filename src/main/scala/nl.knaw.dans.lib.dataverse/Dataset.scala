@@ -34,18 +34,6 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   protected val apiToken: String = configuration.apiToken
   protected val apiVersion: String = configuration.apiVersion
 
-  /**
-   * Returns a JSON document
-   *
-   * @param version
-   * @return
-   */
-  def view(version: Option[String] = None): Try[HttpResponse[Array[Byte]]] = {
-    trace(())
-    if (isPersistentId) get(s"datasets/:persistentId/${ version.map(v => s"versions/$v/").getOrElse("") }?persistentId=$id")
-    else get(s"datasets/$id/${ version.map(v => s"versions/$v/").getOrElse("") }")
-  }
-
   def view2(version: Option[String] = None): Try[DataverseResponse[model.dataset.DatasetLatestVersion]] = {
     trace(version)
     if (isPersistentId) get2[model.dataset.DatasetLatestVersion](s"datasets/:persistentId/${ version.map(v => s"versions/$v/").getOrElse("") }?persistentId=$id")

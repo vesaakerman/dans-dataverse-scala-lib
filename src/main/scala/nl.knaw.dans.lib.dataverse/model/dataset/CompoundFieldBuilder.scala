@@ -19,6 +19,9 @@ import scala.collection.mutable
 
 case class CompoundFieldBuilder(id: String, multipleValues: Boolean = true) {
   private type FieldId = String
+
+  // TODO: make this a Map[FieldId, MDF] as well
+  // TODO: constants for keys such as "multiple", etc
   private val fields = mutable.ListBuffer[(FieldId, MetadataField)]()
   private val values = mutable.ListBuffer[Map[FieldId, MetadataField]]()
 
