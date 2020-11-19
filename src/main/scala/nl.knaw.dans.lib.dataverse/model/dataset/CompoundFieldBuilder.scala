@@ -20,28 +20,26 @@ import scala.collection.mutable
 case class CompoundFieldBuilder(id: String, multipleValues: Boolean = true) {
   private type FieldId = String
 
-  // TODO: make this a Map[FieldId, MDF] as well
-  // TODO: constants for keys such as "multiple", etc
   private val fields = mutable.HashMap[FieldId, MetadataField]()
   private val values = mutable.ListBuffer[Map[FieldId, MetadataField]]()
 
   def withSingleValueField(fieldId: FieldId, value: String): CompoundFieldBuilder = {
-    fields.put(fieldId, PrimitiveSingleValueField(typeName = fieldId, multiple = false, typeClass = "primitive", value = value))
+    fields.put(fieldId, PrimitiveSingleValueField(fieldId, value))
     this
   }
 
   def withMultiValueField(fieldId: FieldId, values: List[String]): CompoundFieldBuilder = {
-    fields.put(fieldId, PrimitiveMultipleValueField(typeName = fieldId, multiple = true, typeClass = "primitive", value = values))
+    fields.put(fieldId, PrimitiveMultipleValueField(typeName = fieldId, multiple = true, typeClass = TYPE_CLASS_PRIMITIVE, value = values))
     this
   }
 
   def withControlledSingleValueField(fieldId: FieldId, value: String): CompoundFieldBuilder = {
-    fields.put(fieldId, PrimitiveSingleValueField(typeName = fieldId, multiple = false, typeClass = "controlledVocabulary", value = value))
+    fields.put(fieldId, PrimitiveSingleValueField(typeName = fieldId, multiple = false, typeClass = TYPE_CLASS_CONTROLLED_VOCABULARY, value = value))
     this
   }
 
   def withControlledMultiValueField(fieldId: FieldId, values: List[String]): CompoundFieldBuilder = {
-    fields.put(fieldId,  PrimitiveMultipleValueField(typeName = fieldId, multiple = true, typeClass = "controlledVocabulary", value = values))
+    fields.put(fieldId,  PrimitiveMultipleValueField(typeName = fieldId, multiple = true, typeClass = TYPE_CLASS_CONTROLLED_VOCABULARY, value = values))
     this
   }
 
@@ -54,7 +52,7 @@ case class CompoundFieldBuilder(id: String, multipleValues: Boolean = true) {
   def build(): MetadataField = {
     if (fields.nonEmpty) addValue()
     if (!multipleValues && values.size > 1) throw new IllegalStateException("Single-value field with more than one value")
-    CompoundField(typeName = id, multiple = multipleValues, typeClass = "compound", value = values.toList)
+    CompoundField(typeName = id, multiple = multipleValues, typeClass = TYPE_CLASS_COMPOUND, value = values.toList)
   }
 }
 

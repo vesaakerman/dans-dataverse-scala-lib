@@ -15,12 +15,8 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-/**
- * A generic metadata field. Metadata fields of all the type classes have these three attributes in common. The value of the field has a
- * different type for each type class.
- *
- * @param typeClass the type class of the field (primitive, controlledVocabulary, compound)
- * @param typeName the field ID
- * @param multiple whether this field allows multiple values
- */
-abstract class MetadataField(val typeClass: String, val typeName: String, val multiple: Boolean)
+case class CompoundField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: List[Map[String, MetadataField]]) extends MetadataField(typeClass, typeName, multiple)
+
+object CompoundField {
+  def apply(typeName: String, multiple: Boolean, value: List[Map[String, MetadataField]]): CompoundField = CompoundField(TYPE_CLASS_COMPOUND, typeName, multiple, value)
+}

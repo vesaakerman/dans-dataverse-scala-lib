@@ -22,17 +22,21 @@ package object dataset {
 
   type MetadataBlocks = Map[String, MetadataBlock]
 
+  val TYPE_CLASS_PRIMITIVE = "primitive"
+  val TYPE_CLASS_CONTROLLED_VOCABULARY = "controlledVocabulary"
+  val TYPE_CLASS_COMPOUND = "compound"
+
   object MetadataFieldSerializer extends CustomSerializer[MetadataField](format => ( {
     case jsonObj: JObject =>
       val multiple = (jsonObj \ "multiple").extract[Boolean]
       val typeClass = (jsonObj \ "typeClass").extract[String]
 
       typeClass match {
-        case "primitive" if multiple => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
-        case "primitive" => Extraction.extract[PrimitiveSingleValueField](jsonObj)
-        case "controlledVocabulary" if multiple => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
-        case "controlledVocabulary" => Extraction.extract[PrimitiveSingleValueField](jsonObj)
-        case "compound" => Extraction.extract[CompoundField](jsonObj)
+        case TYPE_CLASS_PRIMITIVE if multiple => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
+        case TYPE_CLASS_PRIMITIVE => Extraction.extract[PrimitiveSingleValueField](jsonObj)
+        case TYPE_CLASS_CONTROLLED_VOCABULARY if multiple => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
+        case TYPE_CLASS_CONTROLLED_VOCABULARY => Extraction.extract[PrimitiveSingleValueField](jsonObj)
+        case TYPE_CLASS_COMPOUND => Extraction.extract[CompoundField](jsonObj)
       }
   }, {
     case null => JNull

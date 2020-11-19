@@ -34,7 +34,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   protected val apiToken: String = configuration.apiToken
   protected val apiVersion: String = configuration.apiVersion
 
-  def view2(version: Option[String] = None): Try[DataverseResponse[model.dataset.DatasetLatestVersion]] = {
+  def view(version: Option[String] = None): Try[DataverseResponse[model.dataset.DatasetLatestVersion]] = {
     trace(version)
     if (isPersistentId) get2[model.dataset.DatasetLatestVersion](s"datasets/:persistentId/${ version.map(v => s"versions/$v/").getOrElse("") }?persistentId=$id")
     else get2[model.dataset.DatasetLatestVersion](s"datasets/$id/${ version.map(v => s"versions/$v/").getOrElse("") }")
@@ -56,13 +56,6 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     trace(())
     get2[Any](s"datasets/export/?exporter=$format&persistentId=$id")
   }
-
-
-  //  def exportMetadataTo(format: String): Try[HttpResponse[Array[Byte]]] = {
-  //    trace(format)
-  //    if (isPersistentId) get(s"datasets/export?persistentId=$id&exporter=$format", formatResponseAsJson = false)
-  //    else Failure(RequestFailedException(501, "Export to metadata is only supported using persistent identifiers. Use the -p option", null))
-  //  }
 
   def listFiles(version: Option[String] = None): Try[HttpResponse[Array[Byte]]] = {
     trace(version)
