@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DataverseMessage
+import nl.knaw.dans.lib.dataverse.model.dataset.MetadataFieldSerializer
 import org.apache.commons.io.FileUtils
 import org.json4s.{ DefaultFormats, Formats, JValue }
 import org.json4s.native.{ JsonMethods, Serialization }
@@ -27,7 +28,7 @@ import scalaj.http.HttpResponse
 import scala.util.Try
 
 package object dataverse {
-  private implicit val jsonFormats: Formats = new DefaultFormats {}
+  private implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
 
   case class RequestFailedException(status: Int, msg: String, body: String) extends Exception(s"Command could not be executed. Server returned: status line: '$msg', body: '$body'")
 

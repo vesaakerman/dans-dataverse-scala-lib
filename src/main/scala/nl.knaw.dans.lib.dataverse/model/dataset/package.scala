@@ -15,6 +15,27 @@
  */
 package nl.knaw.dans.lib.dataverse.model
 
+import org.json4s.{ CustomSerializer, DefaultFormats, Extraction, Formats, JNull, JObject }
+
 package object dataset {
+  implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
+
   type MetadataBlocks = Map[String, MetadataBlock]
+
+  object MetadataFieldSerializer extends CustomSerializer[MetadataField](format => ( {
+    case jsonObj: JObject =>
+      val multiple = (jsonObj \ "multiple").extract[Boolean]
+      val typeClass = (jsonObj \ "typeClass").extract[String]
+
+      typeClass match {
+        case "primitive" if multiple => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
+        case "primitive" => Extraction.extract[PrimitiveSingleValueField](jsonObj)
+        case "controlledVocabulary" if multiple => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
+        case "controlledVocabulary" => Extraction.extract[PrimitiveSingleValueField](jsonObj)
+        case "compound" => Extraction.extract[CompoundField](jsonObj)
+      }
+  }, {
+    case null => JNull
+  }
+  ))
 }

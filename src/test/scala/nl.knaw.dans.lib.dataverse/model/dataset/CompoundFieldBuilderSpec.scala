@@ -22,7 +22,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class CompoundFieldBuilderSpec extends AnyFlatSpec with Matchers with DebugEnhancedLogging {
-  implicit val jsonFormats: Formats = DefaultFormats
 
   private def getJson(v: Any): JValue = {
     val jsonString = Serialization.writePretty(v)

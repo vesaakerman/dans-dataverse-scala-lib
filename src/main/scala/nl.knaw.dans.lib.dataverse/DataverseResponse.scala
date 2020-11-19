@@ -18,6 +18,7 @@ package nl.knaw.dans.lib.dataverse
 import java.nio.charset.StandardCharsets
 
 import nl.knaw.dans.lib.dataverse.model.DataverseMessage
+import nl.knaw.dans.lib.dataverse.model.dataset.MetadataFieldSerializer
 import org.json4s.native.JsonMethods
 import org.json4s.{ DefaultFormats, Formats, JValue }
 import scalaj.http.HttpResponse
@@ -25,7 +26,7 @@ import scalaj.http.HttpResponse
 import scala.util.Try
 
 case class DataverseResponse[P: Manifest](httpResponse: HttpResponse[Array[Byte]]) {
-  private implicit val jsonFormats: Formats = new DefaultFormats {}
+  private implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
 
   def string: Try[String] = Try {
     new String(httpResponse.body, StandardCharsets.UTF_8)

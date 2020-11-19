@@ -15,6 +15,9 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-case class MetadataField(typeName: String, multiple: Boolean, typeClass: String, value: Any) {
-}
+abstract class MetadataField(val typeClass: String, val typeName: String, val multiple: Boolean)
+
+case class PrimitiveSingleValueField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: String) extends MetadataField(typeClass, typeName, multiple)
+case class PrimitiveMultipleValueField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: List[String]) extends MetadataField(typeClass, typeName, multiple)
+case class CompoundField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: List[Map[String, MetadataField]]) extends MetadataField(typeClass, typeName, multiple)
 

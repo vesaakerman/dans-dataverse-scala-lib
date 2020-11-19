@@ -22,22 +22,22 @@ case class MetadataBlockBuilder(displayName: String) {
   private val fields = mutable.ListBuffer[MetadataField]()
 
   def withSingleValueField(fieldId: FieldId, value: String): MetadataBlockBuilder = {
-    fields.append(MetadataField(typeName = fieldId, multiple = false, typeClass = "primitive", value = value))
+    fields.append(PrimitiveSingleValueField(typeName = fieldId, multiple = false, typeClass = "primitive", value = value))
     this
   }
 
   def withMultiValueField(fieldId: FieldId, values: List[String]): MetadataBlockBuilder = {
-    fields.append(MetadataField(typeName = fieldId, multiple = true, typeClass = "primitive", value = values))
+    fields.append(PrimitiveMultipleValueField(typeName = fieldId, multiple = true, typeClass = "primitive", value = values))
     this
   }
 
   def withControlledSingleValueField(fieldId: FieldId, value: String): MetadataBlockBuilder = {
-    fields.append(MetadataField(typeName = fieldId, multiple = false, typeClass = "controlledVocabulary", value = value))
+    fields.append(PrimitiveSingleValueField(typeName = fieldId, multiple = false, typeClass = "controlledVocabulary", value = value))
     this
   }
 
   def withControlledMultiValueField(fieldId: FieldId, values: List[String]): MetadataBlockBuilder = {
-    fields.append(MetadataField(typeName = fieldId, multiple = true, typeClass = "controlledVocabulary", value = values))
+    fields.append(PrimitiveMultipleValueField(typeName = fieldId, multiple = true, typeClass = "controlledVocabulary", value = values))
     this
   }
 
