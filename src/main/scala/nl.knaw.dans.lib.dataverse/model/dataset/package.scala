@@ -26,7 +26,21 @@ package object dataset {
   val TYPE_CLASS_CONTROLLED_VOCABULARY = "controlledVocabulary"
   val TYPE_CLASS_COMPOUND = "compound"
 
-  object MetadataFieldSerializer extends CustomSerializer[MetadataField](format => ( {
+  val VERSION_DRAFT = ":draft"
+  val VERSION_LATEST = ":latest"
+  val VERSION_LATEST_PUBLISHED = ":latest-published"
+
+  val EXPORT_FORMAT_DDI = "ddi"
+  val EXPORT_FORMAT_OAI_DDI = "oai_ddi"
+  val EXPORT_FORMAT_DCTERMS = "dcterms"
+  val EXPORT_FORMAT_OAI_DC = "oai_dc"
+  val EXPORT_FORMAT_SCHEMA_ORG = "schema.org"
+  val EXPORT_FORMAT_OAI_ORE = "OAI_ORE"
+  val EXPORT_FORMAT_DATACITE = "Datacite"
+  val EXPORT_FORMAT_OAI_DATACITE = "oai_datacite"
+  val EXPORT_FORMAT_DATAVERSE_JSON = "dataverse_json"
+
+  object MetadataFieldSerializer extends CustomSerializer[MetadataField](_ => ( {
     case jsonObj: JObject =>
       val multiple = (jsonObj \ "multiple").extract[Boolean]
       val typeClass = (jsonObj \ "typeClass").extract[String]
@@ -34,8 +48,8 @@ package object dataset {
       typeClass match {
         case TYPE_CLASS_PRIMITIVE if multiple => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
         case TYPE_CLASS_PRIMITIVE => Extraction.extract[PrimitiveSingleValueField](jsonObj)
-        case TYPE_CLASS_CONTROLLED_VOCABULARY if multiple => Extraction.extract[PrimitiveMultipleValueField](jsonObj)
-        case TYPE_CLASS_CONTROLLED_VOCABULARY => Extraction.extract[PrimitiveSingleValueField](jsonObj)
+        case TYPE_CLASS_CONTROLLED_VOCABULARY if multiple => Extraction.extract[ControlledMultipleValueField](jsonObj)
+        case TYPE_CLASS_CONTROLLED_VOCABULARY => Extraction.extract[ControlledSingleValueField](jsonObj)
         case TYPE_CLASS_COMPOUND => Extraction.extract[CompoundField](jsonObj)
       }
   }, {

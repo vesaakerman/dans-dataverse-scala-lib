@@ -15,8 +15,9 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-case class PrimitiveSingleValueField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: String) extends MetadataField(typeClass, typeName, multiple)
+case class PrimitiveSingleValueField (override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: String) extends MetadataField(typeClass, typeName, multiple)
 
 object PrimitiveSingleValueField {
   def apply(typeName: String, value: String): PrimitiveSingleValueField = PrimitiveSingleValueField(TYPE_CLASS_PRIMITIVE, typeName, multiple = false, value)
 }
+

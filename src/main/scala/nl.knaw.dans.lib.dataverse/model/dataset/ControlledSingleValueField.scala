@@ -15,10 +15,8 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-case class CompoundField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: List[Map[String, MetadataField]]) extends MetadataField(typeClass, typeName, multiple)
+case class ControlledSingleValueField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: String) extends MetadataField(typeClass, typeName, multiple)
 
-object CompoundField {
-  def apply(typeName: String, value: List[Map[String, MetadataField]]): CompoundField = CompoundField(TYPE_CLASS_COMPOUND, typeName, multiple = true, value)
-
-  def apply(typeName: String, value: Map[String, MetadataField]): CompoundField = CompoundField(TYPE_CLASS_COMPOUND, typeName, multiple = false, List(value))
+object ControlledSingleValueField {
+  def apply(typeClass: String, typeName: String, multiple: Boolean, value: String): ControlledSingleValueField = new ControlledSingleValueField(TYPE_CLASS_CONTROLLED_VOCABULARY, typeName, multiple = false, value)
 }
