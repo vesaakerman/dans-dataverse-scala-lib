@@ -27,8 +27,6 @@ import scalaj.http.{ Http, HttpResponse, MultiPart }
 import scala.util.Try
 
 private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
-  type Response = HttpResponse[Array[Byte]]
-
   protected val connectionTimeout: Int
   protected val readTimeout: Int
   protected val baseUrl: URI
@@ -155,12 +153,6 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     } yield response
   }
 
-
-  //  protected def prettyPrintJson(json: String): Try[String] = Try {
-  //    trace(())
-  //    Serialization.writePretty(JsonParser.parse(json))
-  //  }
-  //
   def uri(s: String): Try[URI] = Try {
     baseUrl resolve s
   }
