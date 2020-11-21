@@ -266,4 +266,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     if (isPersistentId) super.get2[D](s"datasets/:persistentId/${ endPoint }/?persistentId=$id")
     else super.get2[D](s"datasets/$id/${ endPoint }")
   }
+
+
+
 }
