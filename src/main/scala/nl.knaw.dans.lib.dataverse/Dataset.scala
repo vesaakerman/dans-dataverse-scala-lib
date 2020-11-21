@@ -162,7 +162,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   }
 
   /**
-   * Publish the current draft of a dataset as a new version.
+   * Publishes the current draft of a dataset as a new version.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#publish-a-dataset]]
    * @param updateType major or minor version update
@@ -173,11 +173,18 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     postUnversioned[DatasetVersion]("actions/:publish", "", Map("type" -> updateType.toString))
   }
 
-  def deleteDraft(): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * Deletes the current draft of a dataset.
+   *
+   * Note: as of writing this there is a bug in Dataverse (v5.1.1) which causes it to use the literal string `:persistendId` in the response message
+   * instead of the actual identifier when using a PID.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-dataset-draft]]
+   * @return
+   */
+  def deleteDraft(): Try[DataverseResponse[DataMessage]] = {
     trace(())
-    val path = if (isPersistentId) s"datasets/:persistentId/versions/:draft/?persistentId=$id"
-               else s"datasets/$id/versions/:draft/"
-    deletePath(path)
+    deleteVersioned("", Version.DRAFT)
   }
 
   def setCitationDateField(fieldName: String): Try[HttpResponse[Array[Byte]]] = {
@@ -288,7 +295,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
 
   private def putVersioned[D: Manifest](endPoint: String, body: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, version, queryParams)
+    trace(endPoint, body, version, queryParams)
     if (isPersistentId) super.put2[D](s"datasets/:persistentId/${
       if (version == Version.UNSPECIFIED) ""
       else s"versions/$version"
@@ -310,5 +317,21 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
       else ""
     }")(body)
     else super.postJson2[D](s"datasets/$id/${ endPoint }$queryString")(body)
+  }
+
+  private def deleteVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
+    trace(endPoint, version, queryParams)
+    if (isPersistentId) super.deletePath2[D](s"datasets/:persistentId/${
+      if (version == Version.UNSPECIFIED) ""
+      else s"versions/$version"
+    }/${ endPoint }?persistentId=$id${
+      if (queryString.nonEmpty) "&" + queryString
+      else ""
+    }")
+    else super.deletePath2[D](s"datasets/$id/${
+      if (version == Version.UNSPECIFIED) ""
+      else s"versions/$version"
+    }/${ endPoint }$queryString")
   }
 }
