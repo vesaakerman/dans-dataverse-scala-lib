@@ -19,6 +19,7 @@ import java.net.URI
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DataMessage
+import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.DefaultFormats
@@ -147,41 +148,29 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
                                                                                    else Map.empty) // Sic! any value for replace is interpreted by Dataverse as "true"
   }
 
-  def delete(): Try[DataverseResponse[DataMessage]] = {
-    trace(())
-    if (isPersistentId) deletePath2[DataMessage](s"datasets/:persistentId/?persistentId=$id")
-    else deletePath2[DataMessage](s"datasets/$id")
+  /**
+   * Deletes one or more values from the current draft's metadata. Note that the delete will fail if the
+   * result would leave required fields empty.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-dataset-metadata]]
+   * @param fields the fields to delete
+   * @return
+   */
+  def deleteMetadata(fields: FieldList): Try[DataverseResponse[DatasetVersion]] = {
+    trace(fields)
+    putVersioned("deleteMetadata", Serialization.write(fields), Version.UNSPECIFIED)
   }
 
-  //  def editMetadata(json: File, replace: Boolean): Try[HttpResponse[Array[Byte]]] = {
-  //    tryReadFileToString(json).flatMap(s => editMetadata(s, replace))
-  //  }
-  //
-  //  def editMetadata(json: String, replace: Boolean = false): Try[HttpResponse[Array[Byte]]] = {
-  //    trace(json, replace)
-  //    val path = if (isPersistentId) s"datasets/:persistentId/editMetadata/?persistentId=$id${
-  //      if (replace) "&replace=$replace"
-  //      else ""
-  //    }"
-  //               else s"datasets/$id/editMetadata/${
-  //                 if (replace) "?replace=$replace"
-  //                 else ""
-  //               }"
-  //    put(path)(json)
-  //  }
-
-  def deleteMetadata(json: File): Try[HttpResponse[Array[Byte]]] = {
-    trace(json)
-    val path = if (isPersistentId) s"datasets/:persistentId/deleteMetadata/?persistentId=$id"
-               else s"datasets/$id/deleteMetadata"
-    tryReadFileToString(json).flatMap(put(path))
-  }
-
-  def publish(updateType: String): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * Publish the current draft of a dataset as a new version.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#publish-a-dataset]]
+   * @param updateType major or minor version update
+   * @return
+   */
+  def publish(updateType: UpdateType): Try[DataverseResponse[DatasetVersion]] = {
     trace(updateType)
-    val path = if (isPersistentId) s"datasets/:persistentId/actions/:publish/?persistentId=$id&type=$updateType"
-               else s"datasets/$id/actions/:publish?type=$updateType"
-    postJson(path)(null)
+    postUnversioned[DatasetVersion]("actions/:publish", "", Map("type" -> updateType.toString))
   }
 
   def deleteDraft(): Try[HttpResponse[Array[Byte]]] = {
@@ -299,7 +288,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
 
   private def putVersioned[D: Manifest](endPoint: String, body: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, version)
+    trace(endPoint, version, queryParams)
     if (isPersistentId) super.put2[D](s"datasets/:persistentId/${
       if (version == Version.UNSPECIFIED) ""
       else s"versions/$version"
@@ -311,5 +300,15 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
       if (version == Version.UNSPECIFIED) ""
       else s"versions/$version"
     }/${ endPoint }$queryString")(body)
+  }
+
+  private def postUnversioned[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
+    trace(endPoint, queryParams)
+    if (isPersistentId) super.postJson2[D](s"datasets/:persistentId/${ endPoint }?persistentId=$id${
+      if (queryString.nonEmpty) "&" + queryString
+      else ""
+    }")(body)
+    else super.postJson2[D](s"datasets/$id/${ endPoint }$queryString")(body)
   }
 }

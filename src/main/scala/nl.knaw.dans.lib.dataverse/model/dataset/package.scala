@@ -19,9 +19,12 @@ import nl.knaw.dans.lib.dataverse.model.dataset.CompoundField.CompoundFieldValue
 import org.json4s.{ CustomSerializer, DefaultFormats, Extraction, Formats, JNull, JObject }
 
 package object dataset {
-  implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
-
   type MetadataBlocks = Map[String, MetadataBlock]
+
+  object UpdateType extends Enumeration {
+    type UpdateType = Value
+    val major, minor = Value
+  }
 
   val TYPE_CLASS_PRIMITIVE = "primitive"
   val TYPE_CLASS_CONTROLLED_VOCABULARY = "controlledVocabulary"
@@ -41,6 +44,8 @@ package object dataset {
     subFields.map(f => (f.typeName, f)).toMap
   }
 
+
+  implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
 
   object MetadataFieldSerializer extends CustomSerializer[MetadataField](_ => ( {
     case jsonObj: JObject =>

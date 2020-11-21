@@ -28,4 +28,4 @@ case class DatasetVersion(id: Option[Int] = None,
                           protocol: Option[String] = None,
                           authority: Option[String] = None,
                           identifier: Option[String] = None,
-                          metadataBlocks: MetadataBlocks)
+                          metadataBlocks: MetadataBlocks = Map.empty)
