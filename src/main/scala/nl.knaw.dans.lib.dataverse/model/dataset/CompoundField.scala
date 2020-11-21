@@ -15,10 +15,18 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-case class CompoundField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: List[Map[String, MetadataField]]) extends MetadataField(typeClass, typeName, multiple)
+import nl.knaw.dans.lib.dataverse.model.dataset.CompoundField.CompoundFieldValue
+
+case class CompoundField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: List[CompoundFieldValue]) extends MetadataField(typeClass, typeName, multiple)
 
 object CompoundField {
-  def apply(typeName: String, value: List[Map[String, MetadataField]]): CompoundField = CompoundField(TYPE_CLASS_COMPOUND, typeName, multiple = true, value)
+  type CompoundFieldValue = Map[String, MetadataField]
 
-  def apply(typeName: String, value: Map[String, MetadataField]): CompoundField = CompoundField(TYPE_CLASS_COMPOUND, typeName, multiple = false, List(value))
+  def apply(typeName: String, value: CompoundFieldValue): CompoundField = {
+    CompoundField(TYPE_CLASS_COMPOUND, typeName, multiple = false, List(value))
+  }
+
+  def apply(typeName: String, value: List[CompoundFieldValue]): CompoundField = {
+    CompoundField(TYPE_CLASS_COMPOUND, typeName, multiple = true, value)
+  }
 }

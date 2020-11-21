@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.lib.dataverse.model
 
+import nl.knaw.dans.lib.dataverse.model.dataset.CompoundField.CompoundFieldValue
 import org.json4s.{ CustomSerializer, DefaultFormats, Extraction, Formats, JNull, JObject }
 
 package object dataset {
@@ -26,10 +27,6 @@ package object dataset {
   val TYPE_CLASS_CONTROLLED_VOCABULARY = "controlledVocabulary"
   val TYPE_CLASS_COMPOUND = "compound"
 
-  val VERSION_DRAFT = ":draft"
-  val VERSION_LATEST = ":latest"
-  val VERSION_LATEST_PUBLISHED = ":latest-published"
-
   val EXPORT_FORMAT_DDI = "ddi"
   val EXPORT_FORMAT_OAI_DDI = "oai_ddi"
   val EXPORT_FORMAT_DCTERMS = "dcterms"
@@ -39,6 +36,11 @@ package object dataset {
   val EXPORT_FORMAT_DATACITE = "Datacite"
   val EXPORT_FORMAT_OAI_DATACITE = "oai_datacite"
   val EXPORT_FORMAT_DATAVERSE_JSON = "dataverse_json"
+
+  def toFieldMap(subFields: MetadataField*): CompoundFieldValue = {
+    subFields.map(f => (f.typeName, f)).toMap
+  }
+
 
   object MetadataFieldSerializer extends CustomSerializer[MetadataField](_ => ( {
     case jsonObj: JObject =>

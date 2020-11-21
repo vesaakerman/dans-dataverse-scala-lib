@@ -33,12 +33,20 @@ class DataverseInstance(config: DataverseInstanceConfig) extends DebugEnhancedLo
     new Dataverse(dvId: String, config)
   }
 
-  def dataset(id: String, isPersistentId: Boolean): Dataset = {
-    new Dataset(id, isPersistentId, config)
+  def dataset(pid: String): Dataset = {
+    new Dataset(pid, isPersistentId = true, config)
   }
 
-  def file(id: String, isPersistentId: Boolean): FileCommand = {
-    new FileCommand(id, isPersistentId, config)
+  def dataset(id: Int): Dataset = {
+    new Dataset(id.toString, isPersistentId = false, config)
+  }
+
+  def file(pid: String): FileCommand = {
+    new FileCommand(pid, isPersistentId = true, config)
+  }
+
+  def file(id: Int): FileCommand = {
+    new FileCommand(id.toString, isPersistentId = false, config)
   }
 
   def workflows(): Workflows = {

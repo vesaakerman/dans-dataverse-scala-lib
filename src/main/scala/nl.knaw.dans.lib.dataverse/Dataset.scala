@@ -19,17 +19,21 @@ import java.net.URI
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DataMessage
-import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, MetadataBlock, VERSION_LATEST }
+import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, MetadataBlock, MetadataBlocks }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.json4s.DefaultFormats
+import org.json4s.native.Serialization
 import scalaj.http.HttpResponse
 
-import scala.util.Try
+import scala.util.{ Failure, Try }
 
 /**
  * Functions that operate on a single dataset. See [[https://guides.dataverse.org/en/latest/api/native-api.html#datasets]].
  *
  */
 class Dataset private[dataverse](id: String, isPersistentId: Boolean, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+  private implicit val jsonFormats: DefaultFormats = DefaultFormats
+
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
@@ -39,10 +43,10 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-json-representation-of-a-dataset]]
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-version-of-a-dataset]]
-   * @param version version to view
+   * @param version version to view (optional)
    * @return
    */
-  def view(version: Option[String] = None): Try[DataverseResponse[model.dataset.DatasetVersion]] = {
+  def view(version: Version = Version.UNSPECIFIED): Try[DataverseResponse[model.dataset.DatasetVersion]] = {
     trace(version)
     getVersioned[model.dataset.DatasetVersion]("", version)
   }
@@ -80,6 +84,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    */
   def exportMetadata(format: String): Try[DataverseResponse[Any]] = {
     trace(())
+    if (!isPersistentId) Failure(new IllegalArgumentException("exportMetadata only works with PIDs"))
     // Cannot use helper function because this API does not support the :persistentId constant
     get2[Any](s"datasets/export/?exporter=$format&persistentId=$id")
   }
@@ -89,7 +94,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    * @param version the version of the dataset
    * @return
    */
-  def listFiles(version: Option[String] = None): Try[DataverseResponse[List[DataverseFile]]] = {
+  def listFiles(version: Version = Version.UNSPECIFIED): Try[DataverseResponse[List[DataverseFile]]] = {
     trace(version)
     getVersioned[List[DataverseFile]]("files", version)
   }
@@ -99,7 +104,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    * @param version the version of the dataset
    * @return a map of metadata block identifier to metadata block
    */
-  def listMetadataBlocks(version: Option[String] = None): Try[DataverseResponse[Map[String, MetadataBlock]]] = {
+  def listMetadataBlocks(version: Version = Version.UNSPECIFIED): Try[DataverseResponse[Map[String, MetadataBlock]]] = {
     trace((version))
     getVersioned[Map[String, MetadataBlock]]("metadata", version)
   }
@@ -110,16 +115,21 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    * @param version the version of the dataset
    * @return
    */
-  def getMetadataBlock(name: String, version: Option[String] = None): Try[DataverseResponse[MetadataBlock]] = {
+  def getMetadataBlock(name: String, version: Version = Version.UNSPECIFIED): Try[DataverseResponse[MetadataBlock]] = {
     trace(name, version)
     getVersioned[MetadataBlock](s"metadata/$name", version)
   }
 
-  def updateMetadata(json: File, version: Option[String] = None): Try[HttpResponse[Array[Byte]]] = {
-    trace(json, version)
-    val path = if (isPersistentId) s"datasets/:persistentId/${ version.map(v => s"versions/$v/").getOrElse("") }?persistentId=$id"
-               else s"datasets/$id/${ version.map(v => s"versions/$v/").getOrElse("") }/"
-    tryReadFileToString(json).flatMap(put(path))
+  /**
+   * Creates or overwrites the current draft's metadata.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#update-metadata-for-a-dataset]]
+   * @param metadataBlocks map from metadata block id to [[MetadataBlock]]
+   * @return
+   */
+  def updateMetadata(metadataBlocks: MetadataBlocks): Try[DataverseResponse[DataMessage]] = {
+    trace(metadataBlocks)
+    putVersioned("", Serialization.write(Map("metadataBlocks" -> metadataBlocks)), Version.DRAFT)
   }
 
   def delete(): Try[DataverseResponse[DataMessage]] = {
@@ -255,10 +265,10 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    * Helper functions.
    */
 
-  private def getVersioned[D: Manifest](endPoint: String, version: Option[String]): Try[DataverseResponse[D]] = {
+  private def getVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED): Try[DataverseResponse[D]] = {
     trace(endPoint, version)
-    if (isPersistentId) super.get2[D](s"datasets/:persistentId/versions/${ version.getOrElse(VERSION_LATEST) }/${ endPoint }?persistentId=$id")
-    else super.get2[D](s"datasets/$id/versions/${ version.getOrElse(VERSION_LATEST) }/${ endPoint }")
+    if (isPersistentId) super.get2[D](s"datasets/:persistentId/versions/${ if (version == Version.UNSPECIFIED) "" else version }/${ endPoint }?persistentId=$id")
+    else super.get2[D](s"datasets/$id/versions/${ if (version == Version.UNSPECIFIED) "" else version }/${ endPoint }")
   }
 
   private def getUnversioned[D: Manifest](endPoint: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
@@ -267,6 +277,11 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     else super.get2[D](s"datasets/$id/${ endPoint }")
   }
 
+  private def putVersioned[D: Manifest](endPoint: String, body: String, version: Version = Version.UNSPECIFIED): Try[DataverseResponse[D]] = {
+    trace(endPoint, version)
+    if (isPersistentId) super.put2[D](s"datasets/:persistentId/${ if (version == Version.UNSPECIFIED) "" else s"versions/$version" }/${ endPoint }?persistentId=$id")(body)
+    else super.put2[D](s"datasets/$id/${ if (version == Version.UNSPECIFIED) "" else s"versions/$version" }/${ endPoint }")(body)
+  }
 
 
 }
