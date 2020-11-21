@@ -19,7 +19,7 @@ import java.net.URI
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DataMessage
-import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, MetadataBlock, MetadataBlocks }
+import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
@@ -111,7 +111,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-single-metadata-block-for-a-dataset]]
-   * @param name the metadata block identifier
+   * @param name    the metadata block identifier
    * @param version the version of the dataset
    * @return
    */
@@ -121,15 +121,30 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   }
 
   /**
-   * Creates or overwrites the current draft's metadata.
+   * Creates or overwrites the current draft's metadata completely.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#update-metadata-for-a-dataset]]
    * @param metadataBlocks map from metadata block id to [[MetadataBlock]]
    * @return
    */
-  def updateMetadata(metadataBlocks: MetadataBlocks): Try[DataverseResponse[DataMessage]] = {
+  def updateMetadata(metadataBlocks: MetadataBlocks): Try[DataverseResponse[DatasetVersion]] = {
     trace(metadataBlocks)
-    putVersioned("", Serialization.write(Map("metadataBlocks" -> metadataBlocks)), Version.DRAFT)
+    putVersioned[DatasetVersion]("", Serialization.write(Map("metadataBlocks" -> metadataBlocks)), Version.DRAFT)
+  }
+
+  /**
+   * Edits the current draft's metadata, adding the fields that do not exist yet. If `replace` is set to `false`, all specified
+   * fields must be either currently empty or allow multiple values.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#edit-dataset-metadata]]
+   * @param fields  list of fields to edit
+   * @param replace wether to replace existing values
+   * @return
+   */
+  def editMetadata(fields: FieldList, replace: Boolean = true): Try[DataverseResponse[DatasetVersion]] = {
+    trace(fields)
+    putVersioned("editMetadata", Serialization.write(fields), Version.UNSPECIFIED, if (replace) Map("replace" -> "true")
+                                                                                   else Map.empty) // Sic! any value for replace is interpreted by Dataverse as "true"
   }
 
   def delete(): Try[DataverseResponse[DataMessage]] = {
@@ -138,23 +153,22 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     else deletePath2[DataMessage](s"datasets/$id")
   }
 
-
-  def editMetadata(json: File, replace: Boolean): Try[HttpResponse[Array[Byte]]] = {
-    tryReadFileToString(json).flatMap(s => editMetadata(s, replace))
-  }
-
-  def editMetadata(json: String, replace: Boolean = false): Try[HttpResponse[Array[Byte]]] = {
-    trace(json, replace)
-    val path = if (isPersistentId) s"datasets/:persistentId/editMetadata/?persistentId=$id${
-      if (replace) "&replace=$replace"
-      else ""
-    }"
-               else s"datasets/$id/editMetadata/${
-                 if (replace) "?replace=$replace"
-                 else ""
-               }"
-    put(path)(json)
-  }
+  //  def editMetadata(json: File, replace: Boolean): Try[HttpResponse[Array[Byte]]] = {
+  //    tryReadFileToString(json).flatMap(s => editMetadata(s, replace))
+  //  }
+  //
+  //  def editMetadata(json: String, replace: Boolean = false): Try[HttpResponse[Array[Byte]]] = {
+  //    trace(json, replace)
+  //    val path = if (isPersistentId) s"datasets/:persistentId/editMetadata/?persistentId=$id${
+  //      if (replace) "&replace=$replace"
+  //      else ""
+  //    }"
+  //               else s"datasets/$id/editMetadata/${
+  //                 if (replace) "?replace=$replace"
+  //                 else ""
+  //               }"
+  //    put(path)(json)
+  //  }
 
   def deleteMetadata(json: File): Try[HttpResponse[Array[Byte]]] = {
     trace(json)
@@ -267,8 +281,14 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
 
   private def getVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED): Try[DataverseResponse[D]] = {
     trace(endPoint, version)
-    if (isPersistentId) super.get2[D](s"datasets/:persistentId/versions/${ if (version == Version.UNSPECIFIED) "" else version }/${ endPoint }?persistentId=$id")
-    else super.get2[D](s"datasets/$id/versions/${ if (version == Version.UNSPECIFIED) "" else version }/${ endPoint }")
+    if (isPersistentId) super.get2[D](s"datasets/:persistentId/versions/${
+      if (version == Version.UNSPECIFIED) ""
+      else version
+    }/${ endPoint }?persistentId=$id")
+    else super.get2[D](s"datasets/$id/versions/${
+      if (version == Version.UNSPECIFIED) ""
+      else version
+    }/${ endPoint }")
   }
 
   private def getUnversioned[D: Manifest](endPoint: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
@@ -277,11 +297,19 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     else super.get2[D](s"datasets/$id/${ endPoint }")
   }
 
-  private def putVersioned[D: Manifest](endPoint: String, body: String, version: Version = Version.UNSPECIFIED): Try[DataverseResponse[D]] = {
+  private def putVersioned[D: Manifest](endPoint: String, body: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
     trace(endPoint, version)
-    if (isPersistentId) super.put2[D](s"datasets/:persistentId/${ if (version == Version.UNSPECIFIED) "" else s"versions/$version" }/${ endPoint }?persistentId=$id")(body)
-    else super.put2[D](s"datasets/$id/${ if (version == Version.UNSPECIFIED) "" else s"versions/$version" }/${ endPoint }")(body)
+    if (isPersistentId) super.put2[D](s"datasets/:persistentId/${
+      if (version == Version.UNSPECIFIED) ""
+      else s"versions/$version"
+    }/${ endPoint }?persistentId=$id${
+      if (queryString.nonEmpty) "&" + queryString
+      else ""
+    }")(body)
+    else super.put2[D](s"datasets/$id/${
+      if (version == Version.UNSPECIFIED) ""
+      else s"versions/$version"
+    }/${ endPoint }$queryString")(body)
   }
-
-
 }

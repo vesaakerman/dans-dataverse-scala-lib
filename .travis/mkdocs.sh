@@ -34,4 +34,4 @@ python3 build.py pack
 popd
 echo "DONE installing DANS mkdocs theme."
 
-.travis/redeplo-site.sh
+.travis/redeploy-site.sh
