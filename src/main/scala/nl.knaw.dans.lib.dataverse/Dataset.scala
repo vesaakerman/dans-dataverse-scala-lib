@@ -20,7 +20,7 @@ import java.net.URI
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.{ DataMessage, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
-import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks }
+import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks, PrivateUrlData }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
@@ -125,7 +125,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    * Creates or overwrites the current draft's metadata completely.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#update-metadata-for-a-dataset]]
-   * @param metadataBlocks map from metadata block id to [[MetadataBlock]]
+   * @param metadataBlocks map from metadata block id to `MetadataBlock`
    * @return
    */
   def updateMetadata(metadataBlocks: MetadataBlocks): Try[DataverseResponse[DatasetVersion]] = {
@@ -242,26 +242,30 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   }
 
   /**
-   *
-   * @see [[]]
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-private-url-for-a-dataset]]
    * @return
    */
-//  def createPrivateUrl(): Try[HttpResponse[Array[Byte]]] = {
-//    trace(())
-//  }
-
-  def getPrivateUrl: Try[HttpResponse[Array[Byte]]] = {
+  def createPrivateUrl(): Try[DataverseResponse[PrivateUrlData]] = {
     trace(())
-    val path = if (isPersistentId) s"datasets/:persistentId/privateUrl?persistentId=$id"
-               else s"datasets/$id/privateUrl"
-    get(path)
+    postUnversioned[PrivateUrlData]("privateUrl", "")
   }
 
-  def deletePrivateUrl(): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-the-private-url-for-a-dataset]]
+   * @return
+   */
+  def getPrivateUrl(): Try[DataverseResponse[PrivateUrlData]]= {
     trace(())
-    val path = if (isPersistentId) s"datasets/:persistentId/privateUrl?persistentId=$id"
-               else s"datasets/$id/privateUrl"
-    deletePath(path)
+    getUnversioned("privateUrl")
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-the-private-url-from-a-dataset]]
+   * @return
+   */
+  def deletePrivateUrl(): Try[DataverseResponse[DataMessage]] = {
+    trace(())
+    deleteVersioned[DataMessage]("privateUrl")
   }
 
   def addFile(dataFile: File, jsonMetadata: Option[File], jsonString: Option[String]): Try[HttpResponse[Array[Byte]]] = {

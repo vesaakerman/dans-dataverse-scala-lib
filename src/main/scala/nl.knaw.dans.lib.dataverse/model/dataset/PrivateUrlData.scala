@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib.dataverse.model
+package nl.knaw.dans.lib.dataverse.model.dataset
 
-case class RoleAssignmentReadOnly private(id: Option[Int] = None,
-                                          assignee: String,
-                                          roleId: Int,
-                                          _roleAlias: String,
-                                          privateUrlToken: Option[String] = None,
-                                          definitionPointId: Int)
+import nl.knaw.dans.lib.dataverse.model.RoleAssignmentReadOnly
+
+case class PrivateUrlData(token: String,
+                          link: String,
+                          roleAssignment: RoleAssignmentReadOnly)
