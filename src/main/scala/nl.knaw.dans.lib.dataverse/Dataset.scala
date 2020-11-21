@@ -18,7 +18,7 @@ package nl.knaw.dans.lib.dataverse
 import java.net.URI
 
 import better.files.File
-import nl.knaw.dans.lib.dataverse.model.DataMessage
+import nl.knaw.dans.lib.dataverse.model.{ DataMessage, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -187,33 +187,68 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     deleteVersioned("", Version.DRAFT)
   }
 
-  def setCitationDateField(fieldName: String): Try[HttpResponse[Array[Byte]]] = {
-    trace(())
-    val path = if (isPersistentId) s"datasets/:persistentId/citationdate?persistentId=$id"
-               else s"datasets/$id/citationdate"
-    put(path)(s"$fieldName")
+  /**
+   * Sets the dataset citation date field type for a given dataset.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#set-citation-date-field-type-for-a-dataset]]
+   * @param fieldName the field name of a date field
+   * @return
+   */
+  def setCitationDateField(fieldName: String): Try[DataverseResponse[DataMessage]] = {
+    trace(fieldName)
+    putVersioned("citationdate", fieldName)
   }
 
-  def revertCitationDateField(): Try[HttpResponse[Array[Byte]]] = {
-    trace(())
-    val path = if (isPersistentId) s"datasets/:persistentId/citationdate?persistentId=$id"
-               else s"datasets/$id/citationdate"
-    deletePath(path)
+  /**
+   * Restores the default citation date field type.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#revert-citation-date-field-type-to-default-for-dataset]]
+   * @return
+   */
+  def revertCitationDateField(): Try[DataverseResponse[DataMessage]] = {
+    deleteVersioned("citationdate")
   }
 
-  def listRoleAssignments(): Try[HttpResponse[Array[Byte]]] = {
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-role-assignments-in-a-dataset]]
+   * @return
+   */
+  def listRoleAssignments(): Try[DataverseResponse[List[RoleAssignmentReadOnly]]] = {
     trace(())
-    val path = if (isPersistentId) s"datasets/:persistentId/assignments?persistentId=$id"
-               else s"datasets/$id/assignments"
-    get(path)
+    getUnversioned("assignments")
   }
 
-  def createPrivateUrl(): Try[HttpResponse[Array[Byte]]] = {
-    trace(())
-    val path = if (isPersistentId) s"datasets/:persistentId/privateUrl?persistentId=$id"
-               else s"datasets/$id/privateUrl"
-    postJson(path)(null)
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#assign-a-new-role-on-a-dataset]]
+   * @param roleAssignment object describing the assignment
+   * @return
+   */
+  def assignRole(roleAssignment: RoleAssignment): Try[DataverseResponse[RoleAssignmentReadOnly]] = {
+    trace(roleAssignment)
+    postUnversioned[RoleAssignmentReadOnly]("assignments", Serialization.write(roleAssignment))
   }
+
+  /**
+   * Use [[Dataset#listRoleAssignments]] to get the ID.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-role-assignment-from-a-dataset]]
+   * @param assignmentId the ID of the assignment to delete
+   * @return
+   */
+  def deleteRoleAssignment(assignmentId: Int): Try[DataverseResponse[DataMessage]] = {
+    trace(assignmentId)
+    deleteVersioned[DataMessage](s"assignments/${assignmentId}")
+  }
+
+  /**
+   *
+   * @see [[]]
+   * @return
+   */
+//  def createPrivateUrl(): Try[HttpResponse[Array[Byte]]] = {
+//    trace(())
+//  }
 
   def getPrivateUrl: Try[HttpResponse[Array[Byte]]] = {
     trace(())
