@@ -37,19 +37,6 @@ class FileCommand private[dataverse](id: String, isPersistentId: Boolean, config
     put(path)(doRestict.toString)
   }
 
-  def replace(replacementData: File, replacementJsonMetadata: Option[File], jsonString: Option[String]): Try[HttpResponse[Array[Byte]]] = {
-    trace(replacementData, replacementJsonMetadata, jsonString)
-    val path = if (isPersistentId) s"files/:persistentId/replace?persistentId=$id"
-               else s"files/$id/replace"
-    replacementJsonMetadata.map {
-      f =>
-        tryReadFileToString(f).flatMap {
-          s => postFile(path, replacementData, Some(s))(200, formatResponseAsJson = true)
-        }
-    }.getOrElse {
-      postFile(path, replacementData, jsonString)(200, formatResponseAsJson = true)
-    }
-  }
 
   def uningest(): Try[HttpResponse[Array[Byte]]] = {
     trace(())

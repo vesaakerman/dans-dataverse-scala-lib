@@ -170,7 +170,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    */
   def publish(updateType: UpdateType): Try[DataverseResponse[DatasetVersion]] = {
     trace(updateType)
-    postUnversioned[DatasetVersion]("actions/:publish", "", Map("type" -> updateType.toString))
+    postJsonUnversioned[DatasetVersion]("actions/:publish", "", Map("type" -> updateType.toString))
   }
 
   /**
@@ -226,7 +226,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    */
   def assignRole(roleAssignment: RoleAssignment): Try[DataverseResponse[RoleAssignmentReadOnly]] = {
     trace(roleAssignment)
-    postUnversioned[RoleAssignmentReadOnly]("assignments", Serialization.write(roleAssignment))
+    postJsonUnversioned[RoleAssignmentReadOnly]("assignments", Serialization.write(roleAssignment))
   }
 
   /**
@@ -247,7 +247,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    */
   def createPrivateUrl(): Try[DataverseResponse[PrivateUrlData]] = {
     trace(())
-    postUnversioned[PrivateUrlData]("privateUrl", "")
+    postJsonUnversioned[PrivateUrlData]("privateUrl", "")
   }
 
   /**
@@ -268,18 +268,15 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     deleteVersioned[DataMessage]("privateUrl")
   }
 
-  def addFile(dataFile: File, jsonMetadata: Option[File], jsonString: Option[String]): Try[HttpResponse[Array[Byte]]] = {
-    trace(dataFile, jsonMetadata, jsonString)
-    val path = if (isPersistentId) s"datasets/:persistentId/add?persistentId=$id"
-               else s"datasets/$id/add"
-    jsonMetadata.map {
-      f =>
-        tryReadFileToString(f).flatMap {
-          s => postFile(path, dataFile, Some(s))(200, formatResponseAsJson = true)
-        }
-    }.getOrElse {
-      postFile(path, dataFile, jsonString)(200, formatResponseAsJson = true)
-    }
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#add-a-file-to-a-dataset]]
+   * @param dataFile the file to upload
+   * @param fileMedataData optional metadata for the file
+   * @return
+   */
+  def addFile(dataFile: File, fileMedataData: DataverseFile): Try[DataverseResponse[DataverseFile]] = {
+    trace(dataFile, fileMedataData)
+    postFileUnversioned[DataverseFile]("add", dataFile, Option(Serialization.write(fileMedataData)))
   }
 
   def submitForReview(): Try[HttpResponse[Array[Byte]]] = {
@@ -348,7 +345,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     }/${ endPoint }$queryString")(body)
   }
 
-  private def postUnversioned[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+  private def postJsonUnversioned[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
     trace(endPoint, queryParams)
     if (isPersistentId) super.postJson2[D](s"datasets/:persistentId/${ endPoint }?persistentId=$id${
@@ -356,6 +353,16 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
       else ""
     }")(body)
     else super.postJson2[D](s"datasets/$id/${ endPoint }$queryString")(body)
+  }
+
+  private def postFileUnversioned[D: Manifest](endPoint: String, file: File, metadata: Option[String], queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
+    trace(endPoint, queryParams)
+    if (isPersistentId) super.postFile[D](s"datasets/:persistentId/${ endPoint }?persistentId=$id${
+      if (queryString.nonEmpty) "&" + queryString
+      else ""
+    }", file, metadata)
+    else super.postFile[D](s"datasets/$id/${ endPoint }$queryString", file, metadata)
   }
 
   private def deleteVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {

@@ -55,25 +55,27 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
   }
 
-  protected def httpPostMulti(uri: URI, file: File, optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[HttpResponse[Array[Byte]]] = Try {
+  protected def httpPostMulti[P: Manifest](uri: URI, file: File, optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[DataverseResponse[P]] = Try {
     trace(())
     val parts = MultiPart(name = "file", filename = file.name, mime = "application/octet-stream", new FileInputStream(file.pathAsString), file.size, lenWritten => {}) +:
       optJsonMetadata.map {
         json => List(MultiPart(data = json.getBytes(StandardCharsets.UTF_8), name = "jsonData", filename = "jsonData", mime = "application/json"))
       }.getOrElse(Nil)
 
-    Http(uri.toASCIIString).postMulti(parts: _*)
+    val response = Http(uri.toASCIIString).postMulti(parts: _*)
       .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
       .headers(headers)
       .asBytes
+
+    if (response.code >= 200 && response.code < 300) new DataverseResponse(response)
+    else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
   }
 
-  protected def postFile(subPath: String, file: File, optJsonMetadata: Option[String] = None)(expectedStatus: Int, formatResponseAsJson: Boolean = false): Try[HttpResponse[Array[Byte]]] = {
+  protected def postFile[P: Manifest](subPath: String, file: File, optJsonMetadata: Option[String] = None): Try[DataverseResponse[P]] = {
     for {
       uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
       _ = debug(s"Request URL = $uri")
-      response <- httpPostMulti(uri, file, optJsonMetadata, Map("X-Dataverse-key" -> apiToken))
-      _ = debug(s"response: ${ response.statusLine }, ${ new String(response.body, StandardCharsets.UTF_8) }")
+      response <- httpPostMulti[P](uri, file, optJsonMetadata, Map("X-Dataverse-key" -> apiToken))
     } yield response
   }
 
