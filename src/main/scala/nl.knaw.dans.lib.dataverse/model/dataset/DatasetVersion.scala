@@ -28,4 +28,5 @@ case class DatasetVersion(id: Option[Int] = None,
                           protocol: Option[String] = None,
                           authority: Option[String] = None,
                           identifier: Option[String] = None,
-                          metadataBlocks: MetadataBlocks = Map.empty)
+                          metadataBlocks: MetadataBlocks = Map.empty,
+                          files: List[DataverseFile] = List.empty)

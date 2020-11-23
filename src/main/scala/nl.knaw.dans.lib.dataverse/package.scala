@@ -28,32 +28,13 @@ import scalaj.http.HttpResponse
 import scala.util.Try
 
 package object dataverse {
-  private implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
-
-  case class RequestFailedException(status: Int, msg: String, body: String) extends Exception(s"Command could not be executed. Server returned: status line: '$msg', body: '$body'")
-
-  class RequestFailedException2(status: Int, response: HttpResponse[Array[Byte]]) extends Exception(s"Request to Dataverse failed. Status: $status") {
-    def bodyAsString: String = {
-      new String(response.body, StandardCharsets.UTF_8)
-    }
-  }
-
   def tryReadFileToString(file: File): Try[String] = Try {
     FileUtils.readFileToString(file.toJava, StandardCharsets.UTF_8)
   }
 
   def serializeAsJson(o: Any, pretty: Boolean = false): Try[String] = Try {
+    implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
     if (pretty) Serialization.writePretty(o)
     else Serialization.write(o)
   }
-
-  def getJsonValue(r: HttpResponse[Array[Byte]]): Try[JValue] = Try {
-    JsonMethods.parse(new String(r.body, StandardCharsets.UTF_8))
-  }
-
-  def isDataverseErrorMessage(j: JValue): Try[Boolean] = Try {
-    j.extract[DataverseMessage[Any]].status == "ERROR"
-  }
-
-
 }

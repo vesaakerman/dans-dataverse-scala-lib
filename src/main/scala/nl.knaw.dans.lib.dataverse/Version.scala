@@ -20,6 +20,10 @@ case class Version(v: String) {
 }
 
 object Version {
+  def apply(major: Int, minor: Int): Version = {
+    Version(s"$major.$minor")
+  }
+
   val DRAFT: Version = Version(":draft")
   val LATEST: Version = Version(":latest")
   val LATEST_PUBLISHED: Version = Version(":latest-published")

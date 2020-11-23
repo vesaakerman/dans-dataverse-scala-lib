@@ -15,28 +15,14 @@
  */
 package nl.knaw.dans.lib.dataverse.model
 
-// TODO: clean up example
 /**
  * Response message sent by Dataverse. This can be extracted into case class objects with json4s.
  *
- * @example
- * {{{
- * val config = DataverseInstanceConfig(
- *   apiToken = "2a0e79d2-13ed-4e1a-8ffc-c93b97b01f50",
- *   baseUrl = new URI("https://ddd.dans.knaw.nl/"))
- *
- * implicit val resultOutputStream: PrintStream = System.out
- * val dv = new DataverseInstance(config)
- * val r = dv.dataverse("root").listRoleAssignments().get
- * val result = JsonMethods.parse(new String(r.body)).extract[DataverseMessage[List[RoleAssignment]]]
- * result.status
- * result.data(1)._roleAlias
- * }}}
  * @param status OK or ERROR
  * @param data   payload of the response; in case of an ERROR: the error message
- * @tparam P the expected type of payload
+ * @tparam D the expected type of payload data
  * */
-case class DataverseMessage[P](status: String, data: P)
+case class DataverseMessage[D](status: String, data: D)
 
 /**
  * For informational OK messages Dataverse sometimes (?) uses a separate object with one key - "message" - in the data field.
@@ -58,12 +44,4 @@ object DataverseMessage {
   def apply(status: String, message: String): DataverseMessage[String] = {
     DataverseMessage(status, data = message)
   }
-
-
-
 }
-
-
-
-
-

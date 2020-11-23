@@ -21,29 +21,96 @@ import java.nio.charset.StandardCharsets
 
 import better.files.File
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.apache.commons.io.FileUtils
-import scalaj.http.{ Http, HttpResponse, MultiPart }
+import scalaj.http.{ Http, MultiPart }
 
 import scala.util.Try
 
 private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
+  private val HEADER_CONTENT_TYPE = "Content-Type"
+  private val HEADER_X_DATAVERSE_KEY = "X-Dataverse-key"
+
+  private val MEDIA_TYPE_JSON = "application/json"
+  private val MEDIA_TYPE_OCTET_STREAM = "application/octet-stream"
+  private val MEDIA_TYPE_TEXT = "text/plain"
+
+  private val METHOD_GET = "GET"
+  private val METHOD_POST = "POST"
+  private val METHOD_PUT = "PUT"
+
   protected val connectionTimeout: Int
   protected val readTimeout: Int
   protected val baseUrl: URI
   protected val apiToken: String
   protected val apiVersion: String
 
-  private def http(method: String, uri: URI, body: String = null, headers: Map[String, String] = Map.empty[String, String]): Try[HttpResponse[Array[Byte]]] = Try {
-    {
-      if (body == null) Http(uri.toASCIIString)
-      else Http(uri.toASCIIString).postData(body)
-    }.method(method)
-      .headers(headers)
-      .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
-      .asBytes
+  protected def postFile[D: Manifest](subPath: String, file: File, optJsonMetadata: Option[String] = None): Try[DataverseResponse[D]] = {
+    trace(subPath, file, optJsonMetadata)
+    for {
+      uri <- createUri(Option(subPath))
+      response <- httpPostMulti[D](uri, file, optJsonMetadata, Map(HEADER_X_DATAVERSE_KEY -> apiToken))
+    } yield response
   }
 
-  private def http2[P: Manifest](method: String, uri: URI, body: String = null, headers: Map[String, String] = Map.empty[String, String]): Try[DataverseResponse[P]] = Try {
+  private def httpPostMulti[D: Manifest](uri: URI, file: File, optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[DataverseResponse[D]] = Try {
+    trace(uri, file, optJsonMetadata, headers)
+    val parts = MultiPart(name = "file", filename = file.name, mime = MEDIA_TYPE_OCTET_STREAM, new FileInputStream(file.pathAsString), file.size, lenWritten => {}) +:
+      optJsonMetadata.map {
+        json => List(MultiPart(data = json.getBytes(StandardCharsets.UTF_8), name = "jsonData", filename = "jsonData", mime = MEDIA_TYPE_JSON))
+      }.getOrElse(Nil)
+
+    val response = Http(uri.toASCIIString).postMulti(parts: _*)
+      .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
+      .headers(headers)
+      .asBytes
+
+    if (response.code >= 200 && response.code < 300) DataverseResponse(response)
+    else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
+  }
+
+  protected def get[D: Manifest](subPath: String = null): Try[DataverseResponse[D]] = {
+    trace(subPath)
+    for {
+      uri <- createUri(Option(subPath))
+      response <- http[D](METHOD_GET, uri, body = null, Map(HEADER_X_DATAVERSE_KEY -> apiToken))
+    } yield response
+  }
+
+  protected def postJson[D: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[D]] = {
+    trace(subPath, body)
+    for {
+      uri <- createUri(Option(subPath))
+      response <- http[D](METHOD_POST, uri, body, Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_JSON, HEADER_X_DATAVERSE_KEY -> apiToken))
+    } yield response
+  }
+
+  protected def postText[D: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[D]] = {
+    for {
+      uri <- createUri(Option(subPath))
+      response <- http[D](METHOD_POST, uri, body, Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_TEXT, HEADER_X_DATAVERSE_KEY -> apiToken))
+    } yield response
+  }
+
+  protected def put[D: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[D]] = {
+    for {
+      uri <- createUri(Option(subPath))
+      response <- http[D](METHOD_PUT, uri, body, Map(HEADER_X_DATAVERSE_KEY -> apiToken))
+    } yield response
+  }
+
+  protected def deletePath[D: Manifest](subPath: String = null): Try[DataverseResponse[D]] = {
+    for {
+      uri <- createUri(Option(subPath))
+      response <- http[D]("DELETE", uri, null, Map(HEADER_X_DATAVERSE_KEY -> apiToken))
+    } yield response
+  }
+
+  private def createUri(subPath: Option[String]): Try[URI] = Try {
+    baseUrl resolve new URI(s"api/v${ apiVersion }/${ subPath.getOrElse("") }")
+  }
+
+  private def http[D: Manifest](method: String, uri: URI, body: String = null, headers: Map[String, String] = Map.empty[String, String]): Try[DataverseResponse[D]] = Try {
+    trace(method, uri, body, headers)
+    debug(s"Request URL = $uri")
     val response = {
       if (body == null) Http(uri.toASCIIString)
       else Http(uri.toASCIIString).postData(body)
@@ -53,109 +120,5 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       .asBytes
     if (response.code >= 200 && response.code < 300) new DataverseResponse(response)
     else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
-  }
-
-  protected def httpPostMulti[P: Manifest](uri: URI, file: File, optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[DataverseResponse[P]] = Try {
-    trace(())
-    val parts = MultiPart(name = "file", filename = file.name, mime = "application/octet-stream", new FileInputStream(file.pathAsString), file.size, lenWritten => {}) +:
-      optJsonMetadata.map {
-        json => List(MultiPart(data = json.getBytes(StandardCharsets.UTF_8), name = "jsonData", filename = "jsonData", mime = "application/json"))
-      }.getOrElse(Nil)
-
-    val response = Http(uri.toASCIIString).postMulti(parts: _*)
-      .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
-      .headers(headers)
-      .asBytes
-
-    if (response.code >= 200 && response.code < 300) new DataverseResponse(response)
-    else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
-  }
-
-  protected def postFile[P: Manifest](subPath: String, file: File, optJsonMetadata: Option[String] = None): Try[DataverseResponse[P]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = debug(s"Request URL = $uri")
-      response <- httpPostMulti[P](uri, file, optJsonMetadata, Map("X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-  protected def get(subPath: String = null): Try[HttpResponse[Array[Byte]]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = debug(s"Request URL = $uri")
-      response <- http("GET", uri, body = null, Map("X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-
-  protected def get2[P: Manifest](subPath: String = null): Try[DataverseResponse[P]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = println(s"Request URL = $uri")
-      _ = debug(s"Request URL = $uri")
-      response <- http2[P]("GET", uri, body = null, Map("X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-  protected def postJson(subPath: String = null)(body: String = null): Try[HttpResponse[Array[Byte]]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = debug(s"Request URL = $uri")
-      response <- http("POST", uri, body, Map("Content-Type" -> "application/json", "X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-  protected def postJson2[P: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[P]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = debug(s"Request URL = $uri")
-      response <- http2[P]("POST", uri, body, Map("Content-Type" -> "application/json", "X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-
-  protected def postText(subPath: String = null)(body: String = null): Try[HttpResponse[Array[Byte]]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = debug(s"Request URL = $uri")
-      response <- http("POST", uri, body, Map("Content-Type" -> "text/plain", "X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-  protected def put(subPath: String = null)(body: String = null): Try[HttpResponse[Array[Byte]]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = debug(s"Request URL = $uri")
-      response <- http("PUT", uri, body, Map("X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-  protected def put2[P: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[P]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = debug(s"Request URL = $uri")
-      response <- http2[P]("PUT", uri, body, Map("X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-
-  protected def deletePath(subPath: String = null): Try[HttpResponse[Array[Byte]]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = debug(s"Request URL = $uri")
-      response <- http("DELETE", uri, null, Map("X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-  protected def deletePath2[P: Manifest](subPath: String = null): Try[DataverseResponse[P]] = {
-    for {
-      uri <- uri(s"api/v${ apiVersion }/${ Option(subPath).getOrElse("") }")
-      _ = debug(s"Request URL = $uri")
-      response <- http2[P]("DELETE", uri, null, Map("X-Dataverse-key" -> apiToken))
-    } yield response
-  }
-
-  def uri(s: String): Try[URI] = Try {
-    baseUrl resolve s
   }
 }

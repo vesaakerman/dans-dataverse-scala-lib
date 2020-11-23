@@ -18,13 +18,12 @@ package nl.knaw.dans.lib.dataverse
 import java.net.URI
 
 import better.files.File
-import nl.knaw.dans.lib.dataverse.model.{ DataMessage, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks, PrivateUrlData }
+import nl.knaw.dans.lib.dataverse.model.{ DataMessage, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
-import scalaj.http.HttpResponse
 
 import scala.util.{ Failure, Try }
 
@@ -47,7 +46,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    * @param version version to view (optional)
    * @return
    */
-  def view(version: Version = Version.UNSPECIFIED): Try[DataverseResponse[model.dataset.DatasetVersion]] = {
+  def view(version: Version = Version.LATEST): Try[DataverseResponse[model.dataset.DatasetVersion]] = {
     trace(version)
     getVersioned[model.dataset.DatasetVersion]("", version)
   }
@@ -87,7 +86,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     trace(())
     if (!isPersistentId) Failure(new IllegalArgumentException("exportMetadata only works with PIDs"))
     // Cannot use helper function because this API does not support the :persistentId constant
-    get2[Any](s"datasets/export/?exporter=$format&persistentId=$id")
+    get[Any](s"datasets/export/?exporter=$format&persistentId=$id")
   }
 
   /**
@@ -218,7 +217,6 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     getUnversioned("assignments")
   }
 
-
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#assign-a-new-role-on-a-dataset]]
    * @param roleAssignment object describing the assignment
@@ -238,7 +236,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    */
   def deleteRoleAssignment(assignmentId: Int): Try[DataverseResponse[DataMessage]] = {
     trace(assignmentId)
-    deleteVersioned[DataMessage](s"assignments/${assignmentId}")
+    deleteVersioned[DataMessage](s"assignments/${ assignmentId }")
   }
 
   /**
@@ -254,7 +252,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-the-private-url-for-a-dataset]]
    * @return
    */
-  def getPrivateUrl(): Try[DataverseResponse[PrivateUrlData]]= {
+  def getPrivateUrl(): Try[DataverseResponse[PrivateUrlData]] = {
     trace(())
     getUnversioned("privateUrl")
   }
@@ -270,7 +268,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#add-a-file-to-a-dataset]]
-   * @param dataFile the file to upload
+   * @param dataFile       the file to upload
    * @param fileMedataData optional metadata for the file
    * @return
    */
@@ -279,45 +277,17 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     postFileUnversioned[DataverseFile]("add", dataFile, Option(Serialization.write(fileMedataData)))
   }
 
-  def submitForReview(): Try[HttpResponse[Array[Byte]]] = {
-    trace(())
-    val path = if (isPersistentId) s"datasets/:persistentId/submitForReview?persistentId=$id"
-               else s"datasets/$id/submitForReview"
-    postJson(path)(null)
-  }
-
-  def returnToAuthor(reason: String): Try[HttpResponse[Array[Byte]]] = {
-    trace(reason)
-    val path = if (isPersistentId) s"datasets/:persistentId/returnToAuthor?persistentId=$id"
-               else s"datasets/$id/returnToAuthor"
-    postJson(path)(s"""{"reasonForReturn": "$reason"}""")
-  }
-
-  def link(dataverseAlias: String): Try[HttpResponse[Array[Byte]]] = {
-    trace(dataverseAlias)
-    val path = if (isPersistentId) s"datasets/:persistentId/link/$dataverseAlias?persistentId=$id"
-               else s"datasets/$id/link/$dataverseAlias"
-    put(path)()
-  }
-
-  def getLocks(lockType: Option[String] = None): Try[HttpResponse[Array[Byte]]] = {
-    trace(lockType)
-    val path = if (isPersistentId) s"datasets/:persistentId/locks?persistentId=$id${ lockType.map(t => "&type=$t").getOrElse("") }"
-               else s"datasets/$id/locks${ lockType.map(t => "?type=$t").getOrElse("") }"
-    get(path)
-  }
-
   /*
    * Helper functions.
    */
 
   private def getVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED): Try[DataverseResponse[D]] = {
     trace(endPoint, version)
-    if (isPersistentId) super.get2[D](s"datasets/:persistentId/versions/${
+    if (isPersistentId) super.get[D](s"datasets/:persistentId/versions/${
       if (version == Version.UNSPECIFIED) ""
       else version
     }/${ endPoint }?persistentId=$id")
-    else super.get2[D](s"datasets/$id/versions/${
+    else super.get[D](s"datasets/$id/versions/${
       if (version == Version.UNSPECIFIED) ""
       else version
     }/${ endPoint }")
@@ -325,21 +295,21 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
 
   private def getUnversioned[D: Manifest](endPoint: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     trace(endPoint)
-    if (isPersistentId) super.get2[D](s"datasets/:persistentId/${ endPoint }/?persistentId=$id")
-    else super.get2[D](s"datasets/$id/${ endPoint }")
+    if (isPersistentId) super.get[D](s"datasets/:persistentId/${ endPoint }/?persistentId=$id")
+    else super.get[D](s"datasets/$id/${ endPoint }")
   }
 
   private def putVersioned[D: Manifest](endPoint: String, body: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
     trace(endPoint, body, version, queryParams)
-    if (isPersistentId) super.put2[D](s"datasets/:persistentId/${
+    if (isPersistentId) super.put[D](s"datasets/:persistentId/${
       if (version == Version.UNSPECIFIED) ""
       else s"versions/$version"
     }/${ endPoint }?persistentId=$id${
       if (queryString.nonEmpty) "&" + queryString
       else ""
     }")(body)
-    else super.put2[D](s"datasets/$id/${
+    else super.put[D](s"datasets/$id/${
       if (version == Version.UNSPECIFIED) ""
       else s"versions/$version"
     }/${ endPoint }$queryString")(body)
@@ -348,11 +318,11 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   private def postJsonUnversioned[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
     trace(endPoint, queryParams)
-    if (isPersistentId) super.postJson2[D](s"datasets/:persistentId/${ endPoint }?persistentId=$id${
+    if (isPersistentId) super.postJson[D](s"datasets/:persistentId/${ endPoint }?persistentId=$id${
       if (queryString.nonEmpty) "&" + queryString
       else ""
     }")(body)
-    else super.postJson2[D](s"datasets/$id/${ endPoint }$queryString")(body)
+    else super.postJson[D](s"datasets/$id/${ endPoint }$queryString")(body)
   }
 
   private def postFileUnversioned[D: Manifest](endPoint: String, file: File, metadata: Option[String], queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
@@ -368,14 +338,14 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   private def deleteVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
     trace(endPoint, version, queryParams)
-    if (isPersistentId) super.deletePath2[D](s"datasets/:persistentId/${
+    if (isPersistentId) super.deletePath[D](s"datasets/:persistentId/${
       if (version == Version.UNSPECIFIED) ""
       else s"versions/$version"
     }/${ endPoint }?persistentId=$id${
       if (queryString.nonEmpty) "&" + queryString
       else ""
     }")
-    else super.deletePath2[D](s"datasets/$id/${
+    else super.deletePath[D](s"datasets/$id/${
       if (version == Version.UNSPECIFIED) ""
       else s"versions/$version"
     }/${ endPoint }$queryString")

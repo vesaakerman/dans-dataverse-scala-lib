@@ -25,20 +25,44 @@ import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-case class DataverseResponse[P: Manifest](httpResponse: HttpResponse[Array[Byte]]) {
+/**
+ * Encapsulates a response message from Dataverse. This is often, but not always, a JSON document. This class gives access to
+ * the response at the following levels as far as applicable (from lower to higher levels of abstraction): `httpResponse`, `string`,
+ * `json`, `data`.
+ *
+ * For example if the response contains metadata about a dataset, you would use the [[data]] method to retrieve a model object that
+ * provides easy access to that structure. If JSON is returned but it is not modelled by a case class in [[nl.knaw.dans.lib.dataverse.model]],
+ * then you could use the `json` method to get the json4s AST and query that to get to the information you need. If the body contains
+ * UTF-8 encoded plan text, use `string`. Finally, if the body contains binary data, use `httpResponse`.
+ *
+ * @param httpResponse the underlying raw HTTP response
+ * @tparam D the model object type that can be extracted (if none is available, this is set to `Any`).
+ */
+case class DataverseResponse[D: Manifest] private[dataverse](httpResponse: HttpResponse[Array[Byte]]) {
   private implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
 
+  /**
+   * The body of the response, decoded as UTF-8 string.
+   */
   def string: Try[String] = Try {
     new String(httpResponse.body, StandardCharsets.UTF_8)
   }
 
+  /**
+   * The body of the response, decoded as a `org.json4s.JValue`.
+   */
   def json: Try[JValue] = {
     string.map(s => JsonMethods.parse(s))
   }
 
-  def data: Try[P] = {
+  /**
+   * The corresponding model object extracted from the body.
+   *
+   * @see [[nl.knaw.dans.lib.dataverse.model]]
+   */
+  def data: Try[D] = {
     json
-      .map(_.extract[DataverseMessage[P]])
+      .map(_.extract[DataverseMessage[D]])
       .map(_.data)
   }
 }

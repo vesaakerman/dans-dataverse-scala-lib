@@ -44,7 +44,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   def create(jsonFile: File): Try[DataverseResponse[model.Dataverse]] = {
     trace(jsonFile)
     tryReadFileToString(jsonFile)
-      .flatMap(postJson2[model.Dataverse](s"dataverses/$dvId"))
+      .flatMap(postJson[model.Dataverse](s"dataverses/$dvId"))
   }
 
   /**
@@ -58,7 +58,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     trace(dd)
     for {
       jsonString <- serializeAsJson(dd, logger.underlying.isDebugEnabled)
-      response <- postJson2[model.Dataverse](s"dataverses/$dvId")(jsonString)
+      response <- postJson[model.Dataverse](s"dataverses/$dvId")(jsonString)
     } yield response
   }
 
@@ -70,7 +70,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def view(): Try[DataverseResponse[model.Dataverse]] = {
     trace(())
-    get2(s"dataverses/$dvId")
+    get(s"dataverses/$dvId")
   }
 
   /**
@@ -81,7 +81,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def delete(): Try[DataverseResponse[DataMessage]] = {
     trace(())
-    deletePath2[DataMessage](s"dataverses/$dvId")
+    deletePath[DataMessage](s"dataverses/$dvId")
   }
 
   /**
@@ -92,7 +92,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def contents(): Try[DataverseResponse[List[DataverseItem]]] = {
     trace(())
-    get2[List[DataverseItem]](s"dataverses/$dvId/contents")
+    get[List[DataverseItem]](s"dataverses/$dvId/contents")
   }
 
   /**
@@ -103,7 +103,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def listRoles(): Try[DataverseResponse[List[Role]]] = {
     trace(())
-    get2[List[Role]](s"dataverses/$dvId/roles")
+    get[List[Role]](s"dataverses/$dvId/roles")
   }
 
   // DataverseResponse[DataMessage]
@@ -117,7 +117,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def createRole(jsonFile: File): Try[DataverseResponse[Role]] = {
     trace(jsonFile)
-    tryReadFileToString(jsonFile).flatMap(postJson2[Role](s"dataverses/$dvId/roles"))
+    tryReadFileToString(jsonFile).flatMap(postJson[Role](s"dataverses/$dvId/roles"))
   }
 
   /**
@@ -131,7 +131,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     trace(role)
     for {
       jsonString <- serializeAsJson(role, logger.underlying.isDebugEnabled)
-      response <- postJson2[Role](s"dataverses/$dvId/roles")(jsonString)
+      response <- postJson[Role](s"dataverses/$dvId/roles")(jsonString)
     } yield response
   }
 
@@ -143,7 +143,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def storageSize(): Try[DataverseResponse[DataMessage]] = {
     trace(())
-    get2[DataMessage](s"dataverses/$dvId/storagesize")
+    get[DataMessage](s"dataverses/$dvId/storagesize")
   }
 
   /**
@@ -154,7 +154,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def listFacets(): Try[DataverseResponse[List[String]]] = {
     trace(())
-    get2[List[String]](s"dataverses/$dvId/facets")
+    get[List[String]](s"dataverses/$dvId/facets")
   }
 
   /**
@@ -168,7 +168,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     trace(facets)
     for {
       jsonString <- serializeAsJson(facets, logger.underlying.isDebugEnabled)
-      response <- postJson2[DataMessage](s"dataverses/$dvId/facets")(jsonString)
+      response <- postJson[DataMessage](s"dataverses/$dvId/facets")(jsonString)
     } yield response
   }
 
@@ -180,7 +180,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def listRoleAssignments(): Try[DataverseResponse[List[RoleAssignmentReadOnly]]] = {
     trace(())
-    get2[List[RoleAssignmentReadOnly]](s"dataverses/$dvId/assignments")
+    get[List[RoleAssignmentReadOnly]](s"dataverses/$dvId/assignments")
   }
 
   /**
@@ -194,7 +194,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def setDefaultRole(role: DefaultRole): Try[DataverseResponse[DataMessage]] = {
     trace(role)
-    put2[DataMessage](s"dataverses/$dvId/defaultContributorRole/$role")(null)
+    put[DataMessage](s"dataverses/$dvId/defaultContributorRole/$role")(null)
   }
 
   /**
@@ -204,7 +204,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def assignRole(jsonFile: File): Try[DataverseResponse[RoleAssignmentReadOnly]] = {
     trace(jsonFile)
-    tryReadFileToString(jsonFile).flatMap(postJson2[RoleAssignmentReadOnly](s"dataverses/$dvId/assignments"))
+    tryReadFileToString(jsonFile).flatMap(postJson[RoleAssignmentReadOnly](s"dataverses/$dvId/assignments"))
   }
 
   /**
@@ -216,7 +216,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     trace(roleAssignment)
     for {
       jsonString <- serializeAsJson(roleAssignment, logger.underlying.isDebugEnabled)
-      response <- postJson2[RoleAssignmentReadOnly](s"dataverses/$dvId/assignments")(jsonString)
+      response <- postJson[RoleAssignmentReadOnly](s"dataverses/$dvId/assignments")(jsonString)
     } yield response
   }
 
@@ -229,7 +229,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def deleteRoleAssignment(assignmentId: Int): Try[DataverseResponse[DataMessage]] = {
     trace(assignmentId)
-    deletePath2[DataMessage](s"dataverses/$dvId/assignments/$assignmentId")
+    deletePath[DataMessage](s"dataverses/$dvId/assignments/$assignmentId")
   }
 
   /**
@@ -238,7 +238,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def listMetadataBocks(): Try[DataverseResponse[List[MetadataBlockSummary]]] = {
     trace(())
-    get2[List[MetadataBlockSummary]](s"dataverses/$dvId/metadatablocks")
+    get[List[MetadataBlockSummary]](s"dataverses/$dvId/metadatablocks")
   }
 
   /**
@@ -250,7 +250,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     trace(mdBlockIds)
     for {
       jsonString <- serializeAsJson(mdBlockIds, logger.underlying.isDebugEnabled)
-      response <- postJson2[DataMessage](s"dataverses/$dvId/metadatablocks")(jsonString)
+      response <- postJson[DataMessage](s"dataverses/$dvId/metadatablocks")(jsonString)
     } yield response
   }
 
@@ -260,7 +260,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def isMetadataBlocksRoot: Try[DataverseResponse[Boolean]] = {
     trace(())
-    get2[Boolean](s"dataverses/$dvId/metadatablocks/isRoot")
+    get[Boolean](s"dataverses/$dvId/metadatablocks/isRoot")
   }
 
   /**
@@ -272,7 +272,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     trace(isRoot)
     for {
       jsonString <- serializeAsJson(isRoot, logger.underlying.isDebugEnabled)
-      response <- put2[DataMessage](s"dataverses/$dvId/metadatablocks/isRoot")(jsonString)
+      response <- put[DataMessage](s"dataverses/$dvId/metadatablocks/isRoot")(jsonString)
     } yield response
   }
 
@@ -285,7 +285,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
     trace(dataset)
     for {
       jsonString <- serializeAsJson(dataset, logger.underlying.isDebugEnabled)
-      response <- postJson2[DatasetCreationResult](s"dataverses/$dvId/datasets")(jsonString)
+      response <- postJson[DatasetCreationResult](s"dataverses/$dvId/datasets")(jsonString)
     } yield response
   }
 
@@ -296,7 +296,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def createDataset(jsonFile: File): Try[DataverseResponse[DatasetCreationResult]] = {
     trace(jsonFile)
-    tryReadFileToString(jsonFile).flatMap(postJson2[DatasetCreationResult](s"dataverses/$dvId/datasets"))
+    tryReadFileToString(jsonFile).flatMap(postJson[DatasetCreationResult](s"dataverses/$dvId/datasets"))
   }
 
   /**
@@ -312,7 +312,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
       pid <- getPid(dataset)
       _ = debug(s"Found pid = $pid")
       jsonString <- serializeAsJson(dataset, logger.underlying.isDebugEnabled)
-      response <- postJson2[DatasetCreationResult](s"dataverses/$dvId/datasets/:import?pid=$pid&release=$autoPublish")(jsonString)
+      response <- postJson[DatasetCreationResult](s"dataverses/$dvId/datasets/:import?pid=$pid&release=$autoPublish")(jsonString)
     } yield response
   }
 
@@ -335,6 +335,6 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    */
   def publish(): Try[DataverseResponse[DataverseSummary]] = {
     trace(())
-    postJson2[DataverseSummary](s"dataverses/$dvId/actions/:publish")()
+    postJson[DataverseSummary](s"dataverses/$dvId/actions/:publish")()
   }
 }
