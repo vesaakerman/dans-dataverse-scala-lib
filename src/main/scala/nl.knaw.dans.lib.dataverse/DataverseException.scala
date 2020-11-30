@@ -17,4 +17,4 @@ package nl.knaw.dans.lib.dataverse
 
 import scalaj.http.HttpResponse
 
-case class DataverseException(status: Int, message: String, httpResponse: HttpResponse[Array[Byte]]) extends Exception(s"Request to Dataverse failed. Status: $status. Message: $message")
+case class DataverseException(status: Int, message: String, httpResponse: HttpResponse[Array[Byte]]) extends RuntimeException(s"Request to Dataverse failed. Status: $status. Message: $message")

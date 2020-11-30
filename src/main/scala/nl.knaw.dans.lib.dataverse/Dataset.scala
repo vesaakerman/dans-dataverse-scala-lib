@@ -144,7 +144,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   def editMetadata(fields: FieldList, replace: Boolean = true): Try[DataverseResponse[DatasetVersion]] = {
     trace(fields)
     putVersioned("editMetadata", Serialization.write(fields), Version.UNSPECIFIED, if (replace) Map("replace" -> "true")
-                                                                                   else Map.empty) // Sic! any value for replace is interpreted by Dataverse as "true"
+                                                                                   else Map.empty) // Sic! any value for "replace" is interpreted by Dataverse as "true", even "replace=false"
   }
 
   /**

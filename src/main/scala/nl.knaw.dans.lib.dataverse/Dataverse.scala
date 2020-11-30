@@ -333,8 +333,8 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
    *
    * @return
    */
-  def publish(): Try[DataverseResponse[DataverseSummary]] = {
+  def publish(): Try[DataverseResponse[model.Dataverse]] = {
     trace(())
-    postJson[DataverseSummary](s"dataverses/$dvId/actions/:publish")()
+    postJson[model.Dataverse](s"dataverses/$dvId/actions/:publish")()
   }
 }
