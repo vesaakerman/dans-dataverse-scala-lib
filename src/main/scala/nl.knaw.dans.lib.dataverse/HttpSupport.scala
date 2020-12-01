@@ -36,32 +36,47 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   private val METHOD_GET = "GET"
   private val METHOD_POST = "POST"
   private val METHOD_PUT = "PUT"
+  private val METHOD_DELETE = "DELETE"
 
   protected val connectionTimeout: Int
   protected val readTimeout: Int
   protected val baseUrl: URI
   protected val apiToken: String
+  // If false, it is sent through the X-Dataverse-key header
+  protected val sendApiTokenViaBasicAuth: Boolean
+  protected val apiPrefix: String
   protected val apiVersion: String
 
   protected def postFile[D: Manifest](subPath: String, file: File, optJsonMetadata: Option[String] = None): Try[DataverseResponse[D]] = {
     trace(subPath, file, optJsonMetadata)
     for {
       uri <- createUri(Option(subPath))
-      response <- httpPostMulti[D](uri, file, optJsonMetadata, Map(HEADER_X_DATAVERSE_KEY -> apiToken))
+      response <- httpPostMulti[D](uri, file, optJsonMetadata)
     } yield response
   }
 
   private def httpPostMulti[D: Manifest](uri: URI, file: File, optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[DataverseResponse[D]] = Try {
     trace(uri, file, optJsonMetadata, headers)
+
+    /*
+     * SWORD sends the API key through the user name of basic auth. The other APIs use the X-Dataverse-key.
+     */
+    val hs = if (!sendApiTokenViaBasicAuth) headers + (HEADER_X_DATAVERSE_KEY -> apiToken)
+             else headers
+    val credentials = if (sendApiTokenViaBasicAuth) Option(apiToken, "")
+                      else Option.empty
+
     val parts = MultiPart(name = "file", filename = file.name, mime = MEDIA_TYPE_OCTET_STREAM, new FileInputStream(file.pathAsString), file.size, lenWritten => {}) +:
       optJsonMetadata.map {
         json => List(MultiPart(data = json.getBytes(StandardCharsets.UTF_8), name = "jsonData", filename = "jsonData", mime = MEDIA_TYPE_JSON))
       }.getOrElse(Nil)
 
-    val response = Http(uri.toASCIIString).postMulti(parts: _*)
+    val request = Http(uri.toASCIIString).postMulti(parts: _*)
       .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
-      .headers(headers)
-      .asBytes
+      .headers(hs)
+    val response = credentials
+      .map { case (u, p) => request.auth(u, p) }
+      .getOrElse(request).asBytes
 
     if (response.code >= 200 && response.code < 300) DataverseResponse(response)
     else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
@@ -71,7 +86,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     trace(subPath)
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D](METHOD_GET, uri, body = null, Map(HEADER_X_DATAVERSE_KEY -> apiToken))
+      response <- http[D](METHOD_GET, uri, body = null)
     } yield response
   }
 
@@ -79,45 +94,58 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     trace(subPath, body)
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D](METHOD_POST, uri, body, Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_JSON, HEADER_X_DATAVERSE_KEY -> apiToken))
+      response <- http[D](METHOD_POST, uri, body, Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_JSON))
     } yield response
   }
 
   protected def postText[D: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[D]] = {
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D](METHOD_POST, uri, body, Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_TEXT, HEADER_X_DATAVERSE_KEY -> apiToken))
+      response <- http[D](METHOD_POST, uri, body, Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_TEXT))
     } yield response
   }
 
   protected def put[D: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[D]] = {
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D](METHOD_PUT, uri, body, Map(HEADER_X_DATAVERSE_KEY -> apiToken))
+      response <- http[D](METHOD_PUT, uri, body)
     } yield response
   }
 
   protected def deletePath[D: Manifest](subPath: String = null): Try[DataverseResponse[D]] = {
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D]("DELETE", uri, null, Map(HEADER_X_DATAVERSE_KEY -> apiToken))
+      response <- http[D](METHOD_DELETE, uri, null)
     } yield response
   }
 
   private def createUri(subPath: Option[String]): Try[URI] = Try {
-    baseUrl resolve new URI(s"api/v${ apiVersion }/${ subPath.getOrElse("") }")
+    baseUrl resolve new URI(s"${ apiPrefix }/v${ apiVersion }/${ subPath.getOrElse("") }")
   }
 
-  private def http[D: Manifest](method: String, uri: URI, body: String = null, headers: Map[String, String] = Map.empty[String, String]): Try[DataverseResponse[D]] = Try {
+  private def http[D: Manifest](method: String, uri: URI,
+                                body: String = null,
+                                headers: Map[String, String] = Map.empty[String, String]): Try[DataverseResponse[D]] = Try {
     trace(method, uri, body, headers)
     debug(s"Request URL = $uri")
-    val response = {
+
+    /*
+     * SWORD sends the API key through the user name of basic auth. The other APIs use the X-Dataverse-key.
+     */
+    val hs = if (!sendApiTokenViaBasicAuth) headers + (HEADER_X_DATAVERSE_KEY -> apiToken)
+             else headers
+    val credentials = if (sendApiTokenViaBasicAuth) Option(apiToken, "")
+                      else Option.empty
+
+    val request = {
       if (body == null) Http(uri.toASCIIString)
       else Http(uri.toASCIIString).postData(body)
     }.method(method)
-      .headers(headers)
+      .headers(hs)
       .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
-      .asBytes
+    val response = credentials
+      .map { case (u, p) => request.auth(u, p) }
+      .getOrElse(request).asBytes
     if (response.code >= 200 && response.code < 300) new DataverseResponse(response)
     else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
   }

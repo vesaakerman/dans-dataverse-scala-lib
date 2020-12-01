@@ -18,5 +18,5 @@ package nl.knaw.dans.lib.dataverse.model.dataset
 case class ControlledSingleValueField(override val typeClass: String, override val typeName: String, override val multiple: Boolean, value: String) extends MetadataField(typeClass, typeName, multiple)
 
 object ControlledSingleValueField {
-  def apply(typeClass: String, typeName: String, multiple: Boolean, value: String): ControlledSingleValueField = new ControlledSingleValueField(TYPE_CLASS_CONTROLLED_VOCABULARY, typeName, multiple = false, value)
+  def apply(typeName: String, value: String): ControlledSingleValueField = new ControlledSingleValueField(TYPE_CLASS_CONTROLLED_VOCABULARY, typeName, multiple = false, value)
 }

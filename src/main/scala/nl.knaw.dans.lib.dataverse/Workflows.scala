@@ -28,6 +28,8 @@ class Workflows private[dataverse](configuration: DataverseInstanceConfig) exten
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
+  protected val sendApiTokenViaBasicAuth = false
+  protected val apiPrefix: String = "api"
   protected val apiVersion: String = configuration.apiVersion
 
   def resume(invocationId: String): Try[DataverseResponse[DataMessage]] = {

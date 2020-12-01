@@ -17,18 +17,28 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
-import better.files.File
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class FileCommand private[dataverse](id: String, isPersistentId: Boolean, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+class Sword private[dataverse](configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+  trace(())
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
-  protected val sendApiTokenViaBasicAuth = false
-  protected val apiPrefix: String = "api"
-  protected val apiVersion: String = configuration.apiVersion
+  protected val apiPrefix: String = "dvn/api/data-deposit"
+  protected val sendApiTokenViaBasicAuth = true
+  protected val apiVersion: String = "1.1" // TODO: Make configurable?
+
+  /**
+   * Deletes a file from the current draft of the dataset. To look up the databaseId use [[Dataset#listFiles]].
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/sword.html#delete-a-file-by-database-id]]
+   * @param databaseId the database ID of the file to delete
+   * @return
+   */
+  def deleteFile(databaseId: Int): Try[DataverseResponse[Nothing]] = {
+    deletePath[Nothing](s"swordv2/edit-media/file/${ databaseId }")
+  }
 }

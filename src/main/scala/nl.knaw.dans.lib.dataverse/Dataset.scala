@@ -38,6 +38,8 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
+  protected val sendApiTokenViaBasicAuth = false
+  protected val apiPrefix: String = "api"
   protected val apiVersion: String = configuration.apiVersion
 
   /**

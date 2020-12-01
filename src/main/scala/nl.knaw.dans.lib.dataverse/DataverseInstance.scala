@@ -41,6 +41,10 @@ class DataverseInstance(config: DataverseInstanceConfig) extends DebugEnhancedLo
     new Dataset(id.toString, isPersistentId = false, config)
   }
 
+  def sword(): Sword = {
+    new Sword(config)
+  }
+
   def file(pid: String): FileCommand = {
     new FileCommand(pid, isPersistentId = true, config)
   }
