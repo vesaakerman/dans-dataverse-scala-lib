@@ -44,7 +44,6 @@ package object dataset {
     subFields.map(f => (f.typeName, f)).toMap
   }
 
-
   implicit val jsonFormats: Formats = DefaultFormats + MetadataFieldSerializer
 
   object MetadataFieldSerializer extends CustomSerializer[MetadataField](_ => ( {

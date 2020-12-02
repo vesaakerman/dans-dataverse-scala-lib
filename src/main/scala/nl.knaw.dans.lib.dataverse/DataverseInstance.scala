@@ -41,6 +41,10 @@ class DataverseInstance(config: DataverseInstanceConfig) extends DebugEnhancedLo
     new Dataset(id.toString, isPersistentId = false, config)
   }
 
+  def admin(): Admin = {
+    new Admin(config)
+  }
+
   def sword(): Sword = {
     new Sword(config)
   }
