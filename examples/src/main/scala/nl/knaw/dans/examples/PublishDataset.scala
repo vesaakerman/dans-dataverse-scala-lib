@@ -29,6 +29,8 @@ object PublishDataset extends App with DebugEnhancedLogging with BaseApp {
     _ = logger.info(s"Raw response message: ${ response.string }")
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
+    dsv <- response.data
+    _ = logger.info(s"Published state: ${dsv.versionState.getOrElse("N/A")}")
   } yield ()
   logger.info(s"result = $result")
 }

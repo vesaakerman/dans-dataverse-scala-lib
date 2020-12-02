@@ -37,9 +37,9 @@ class Admin private[dataverse] (configuration: DataverseInstanceConfig) extends 
    * @param id the user ID
    * @return
    */
-  def getSingleUser(id: String): Try[DataverseResponse[Any]] = {
+  def getSingleUser(id: String): Try[DataverseResponse[model.User]] = {
     trace(id)
-    get[Any](s"api/admin/authenticatedUsers/$id")
+    get[model.User](s"api/admin/authenticatedUsers/$id")
   }
 
 }

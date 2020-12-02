@@ -26,6 +26,8 @@ object GetUser extends App with BaseApp {
     _ = logger.info(s"Raw response message: ${ response.string }")
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
+    user <- response.data
+    _ = logger.info(s"User first name is: '${user.firstName}'")
   } yield ()
   logger.info(s"result = $result")
 }

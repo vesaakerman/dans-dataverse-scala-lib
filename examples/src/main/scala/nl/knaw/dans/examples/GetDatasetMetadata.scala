@@ -29,6 +29,8 @@ object GetDatasetMetadata extends App with DebugEnhancedLogging with BaseApp {
     _ = logger.info(s"Raw response: ${ response.string }")
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json)}")
+    dsv <- response.data
+    _ = logger.info(s"Dataset version number is: ${dsv.versionNumber.getOrElse("?")}.${dsv.versionMinorNumber.getOrElse("?")}")
   } yield ()
   logger.info(s"result = $result")
 }
