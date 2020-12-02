@@ -82,11 +82,11 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
   }
 
-  protected def get[D: Manifest](subPath: String = null): Try[DataverseResponse[D]] = {
+  protected def get[D: Manifest](subPath: String = null, params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     trace(subPath)
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D](METHOD_GET, uri, body = null)
+      response <- http[D](METHOD_GET, uri, body = null, Map.empty, params)
     } yield response
   }
 
@@ -125,9 +125,10 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
 
   private def http[D: Manifest](method: String, uri: URI,
                                 body: String = null,
-                                headers: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = Try {
-    trace(method, uri, body, headers)
-    debug(s"Request URL = $uri")
+                                headers: Map[String, String] = Map.empty,
+                                params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = Try {
+    trace(method, uri, body, headers, params)
+    debug(s"Request URL = $uri, query params = $params")
 
     /*
      * SWORD sends the API key through the user name of basic auth. The other APIs use the X-Dataverse-key.
@@ -143,6 +144,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       else Http(uri.toASCIIString).postData(body)
     }.method(method)
       .headers(hs)
+      .params(params)
       .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
     val request2 = credentials
       .map { case (u, p) => request.auth(u, p) }
@@ -151,7 +153,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       .map {  k => request2.param("unblock-key", k)}
       .getOrElse(request2)
     val response = request3.asBytes
-    if (response.code >= 200 && response.code < 300) new DataverseResponse(response)
+    if (response.code >= 200 && response.code < 300) DataverseResponse(response)
     else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
   }
 }

@@ -50,7 +50,7 @@ trait HttpIdentifiedObjectSupport extends HttpSupport {
    */
   protected def getUnversioned[D: Manifest](endPoint: String): Try[DataverseResponse[D]] = {
     trace(endPoint)
-    if (isPersistentId) super.get[D](s"${ endPointBase }/:persistentId/${ endPoint }/?persistentId=$id")
+    if (isPersistentId) super.get[D](s"${ endPointBase }/:persistentId/${ endPoint }", Map("persistentId" -> id))
     else super.get[D](s"${ endPointBase }/$id/${ endPoint }")
   }
 
@@ -84,19 +84,13 @@ trait HttpIdentifiedObjectSupport extends HttpSupport {
     else super.put[D](s"${ endPointBase }/$id/${ endPoint }$queryString")(body)
   }
 
-  protected def deleteVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+  protected def delete2[D: Manifest](endPoint: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, version, queryParams)
-    if (isPersistentId) super.deletePath[D](s"${ endPointBase }/:persistentId/${
-      if (version == Version.UNSPECIFIED) ""
-      else s"versions/$version"
-    }/${ endPoint }?persistentId=$id${
+    trace(endPoint, queryParams)
+    if (isPersistentId) super.deletePath[D](s"${ endPointBase }/:persistentId/${ endPoint }?persistentId=$id${
       if (queryString.nonEmpty) "&" + queryString
       else ""
     }")
-    else super.deletePath[D](s"${ endPointBase }/$id/${
-      if (version == Version.UNSPECIFIED) ""
-      else s"versions/$version"
-    }/${ endPoint }$queryString")
+    else super.deletePath[D](s"${ endPointBase }/$id/${ endPoint }$queryString")
   }
 }

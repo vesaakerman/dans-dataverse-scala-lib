@@ -192,7 +192,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    */
   def deleteDraft(): Try[DataverseResponse[DataMessage]] = {
     trace(())
-    deleteVersioned("", Version.DRAFT)
+    delete2("versions/:draft")
   }
 
   /**
@@ -214,7 +214,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @return
    */
   def revertCitationDateField(): Try[DataverseResponse[DataMessage]] = {
-    deleteVersioned("citationdate")
+    delete2("citationdate")
   }
 
   /**
@@ -245,7 +245,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    */
   def deleteRoleAssignment(assignmentId: Int): Try[DataverseResponse[DataMessage]] = {
     trace(assignmentId)
-    deleteVersioned[DataMessage](s"assignments/${ assignmentId }")
+    delete2[DataMessage](s"assignments/${ assignmentId }")
   }
 
   /**
@@ -272,7 +272,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    */
   def deletePrivateUrl(): Try[DataverseResponse[DataMessage]] = {
     trace(())
-    deleteVersioned[DataMessage]("privateUrl")
+    delete2[DataMessage]("privateUrl")
   }
 
   /**
