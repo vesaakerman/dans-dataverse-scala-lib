@@ -19,14 +19,13 @@ import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
 
 object GetUser extends App with BaseApp {
-//  private implicit val jsonFormats: DefaultFormats = DefaultFormats
-//  val result = for {
-//    response <- server.
-//    _ = logger.info(s"Raw response message: ${ response.string }")
-//    _ = logger.info(s"JSON AST: ${ response.json }")
-//    _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
-//    dataverseSummary <- response.data
-//    _ = logger.info(s"Description of the dataverse: '${ dataverseSummary.description.getOrElse("NO DESCRIPTION FOUND") }'")
-//  } yield ()
-//  logger.info(s"result = $result")
+  private implicit val jsonFormats: DefaultFormats = DefaultFormats
+  private val userId = args(0)
+  val result = for {
+    response <- server.admin().getSingleUser(userId)
+    _ = logger.info(s"Raw response message: ${ response.string }")
+    _ = logger.info(s"JSON AST: ${ response.json }")
+    _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
+  } yield ()
+  logger.info(s"result = $result")
 }

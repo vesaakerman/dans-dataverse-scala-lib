@@ -19,6 +19,7 @@ import java.net.URI
 
 case class DataverseInstanceConfig(baseUrl: URI,
                                    apiToken: String,
+                                   unblockKey: Option[String] = None,
                                    connectionTimeout: Int = 5000,
                                    readTimeout: Int = 300000,
                                    apiVersion: String = "1")

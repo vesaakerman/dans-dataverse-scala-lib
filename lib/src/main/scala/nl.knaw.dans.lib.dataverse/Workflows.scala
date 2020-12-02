@@ -29,8 +29,9 @@ class Workflows private[dataverse](configuration: DataverseInstanceConfig) exten
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
   protected val sendApiTokenViaBasicAuth = false
+  protected val unblockKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
-  protected val apiVersion: String = configuration.apiVersion
+  protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 
   def resume(invocationId: String): Try[DataverseResponse[DataMessage]] = {
     postText(s"workflows/$invocationId")(body = "")

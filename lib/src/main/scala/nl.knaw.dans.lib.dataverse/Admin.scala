@@ -27,16 +27,19 @@ class Admin private[dataverse] (configuration: DataverseInstanceConfig) extends 
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
   protected val sendApiTokenViaBasicAuth = false
+  protected val unblockKey: Option[String] = configuration.unblockKey
   protected val apiPrefix: String = ""
-  protected val apiVersion: String = configuration.apiVersion
-
+  protected val apiVersion: Option[String] = Option.empty // No version allowed here
   /**
+   * Returns the account data for a single user.
    *
-   * @param id
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-single-user]]
+   * @param id the user ID
    * @return
    */
   def getSingleUser(id: String): Try[DataverseResponse[Any]] = {
-    ???
+    trace(id)
+    get[Any](s"api/admin/authenticatedUsers/$id")
   }
 
 }

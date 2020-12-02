@@ -29,6 +29,7 @@ class FileCommand private[dataverse](id: String, isPersistentId: Boolean, config
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
   protected val sendApiTokenViaBasicAuth = false
+  protected val unblockKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
-  protected val apiVersion: String = configuration.apiVersion
+  protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 }

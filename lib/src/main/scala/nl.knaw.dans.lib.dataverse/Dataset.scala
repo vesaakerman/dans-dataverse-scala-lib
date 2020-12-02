@@ -39,8 +39,9 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
   protected val sendApiTokenViaBasicAuth = false
+  protected val unblockKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
-  protected val apiVersion: String = configuration.apiVersion
+  protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-json-representation-of-a-dataset]]

@@ -19,6 +19,8 @@ import nl.knaw.dans.lib.dataverse.DataverseInstance;
 import nl.knaw.dans.lib.dataverse.DataverseInstanceConfig;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import scala.Option;
+import scala.Some;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,7 +32,11 @@ public class BaseApp {
   static {
     try {
       PropertiesConfiguration props = new PropertiesConfiguration("dataverse.properties");
-      server = new DataverseInstance(new DataverseInstanceConfig(new URI(props.getString("baseUrl")), props.getString("apiKey"), 5000, 300000, "1"));
+      server = new DataverseInstance(new DataverseInstanceConfig(
+          new URI(props.getString("baseUrl")),
+          props.getString("apiKey"),
+          new Some<String>(props.getString("unblockKey")),
+          5000, 300000, "1"));
     }
     catch (ConfigurationException e) {
       e.printStackTrace();

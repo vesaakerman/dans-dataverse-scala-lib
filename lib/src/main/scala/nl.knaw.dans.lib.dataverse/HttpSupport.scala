@@ -44,8 +44,9 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   protected val apiToken: String
   // If false, it is sent through the X-Dataverse-key header
   protected val sendApiTokenViaBasicAuth: Boolean
+  protected val unblockKey: Option[String]
   protected val apiPrefix: String
-  protected val apiVersion: String
+  protected val apiVersion: Option[String]
 
   protected def postFile[D: Manifest](subPath: String, file: File, optJsonMetadata: Option[String] = None): Try[DataverseResponse[D]] = {
     trace(subPath, file, optJsonMetadata)
@@ -120,12 +121,12 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   }
 
   private def createUri(subPath: Option[String]): Try[URI] = Try {
-    baseUrl resolve new URI(s"${ apiPrefix }/v${ apiVersion }/${ subPath.getOrElse("") }")
+    baseUrl resolve new URI(s"${ apiPrefix }/${ apiVersion.map(version => s"v$version/").getOrElse("") }${ subPath.getOrElse("") }")
   }
 
   private def http[D: Manifest](method: String, uri: URI,
                                 body: String = null,
-                                headers: Map[String, String] = Map.empty[String, String]): Try[DataverseResponse[D]] = Try {
+                                headers: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = Try {
     trace(method, uri, body, headers)
     debug(s"Request URL = $uri")
 
@@ -137,15 +138,20 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     val credentials = if (sendApiTokenViaBasicAuth) Option(apiToken, "")
                       else Option.empty
 
+    // TODO: Refactor request 1,2,3 stuff
     val request = {
       if (body == null) Http(uri.toASCIIString)
       else Http(uri.toASCIIString).postData(body)
     }.method(method)
       .headers(hs)
       .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
-    val response = credentials
+    val request2 = credentials
       .map { case (u, p) => request.auth(u, p) }
-      .getOrElse(request).asBytes
+      .getOrElse(request)
+    val request3 = unblockKey
+      .map {  k => request2.param("unblock-key", k)}
+      .getOrElse(request2)
+    val response = request3.asBytes
     if (response.code >= 200 && response.code < 300) new DataverseResponse(response)
     else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
   }

@@ -29,7 +29,8 @@ class Sword private[dataverse](configuration: DataverseInstanceConfig) extends H
   protected val apiToken: String = configuration.apiToken
   protected val apiPrefix: String = "dvn/api/data-deposit"
   protected val sendApiTokenViaBasicAuth = true
-  protected val apiVersion: String = "1.1" // TODO: Make configurable?
+  protected val unblockKey: Option[String] = Option.empty
+  protected val apiVersion: Option[String] = Option("1.1") // TODO: Make configurable?
 
   /**
    * Deletes a file from the current draft of the dataset. To look up the databaseId use [[Dataset#listFiles]].
