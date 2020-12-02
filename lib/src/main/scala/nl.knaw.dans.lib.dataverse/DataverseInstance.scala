@@ -34,11 +34,11 @@ class DataverseInstance(config: DataverseInstanceConfig) extends DebugEnhancedLo
   }
 
   def dataset(pid: String): Dataset = {
-    new Dataset(pid, isPersistentId = true, config)
+    new Dataset(pid, isPersistentDatasetId = true, config)
   }
 
   def dataset(id: Int): Dataset = {
-    new Dataset(id.toString, isPersistentId = false, config)
+    new Dataset(id.toString, isPersistentDatasetId = false, config)
   }
 
   def admin(): Admin = {
@@ -50,11 +50,11 @@ class DataverseInstance(config: DataverseInstanceConfig) extends DebugEnhancedLo
   }
 
   def file(pid: String): FileCommand = {
-    new FileCommand(pid, isPersistentId = true, config)
+    new FileCommand(pid, isPersistentFileId = true, config)
   }
 
   def file(id: Int): FileCommand = {
-    new FileCommand(id.toString, isPersistentId = false, config)
+    new FileCommand(id.toString, isPersistentFileId = false, config)
   }
 
   def workflows(): Workflows = {

@@ -18,11 +18,11 @@ package nl.knaw.dans.lib.dataverse
 import java.io.FileInputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets
-
 import better.files.File
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scalaj.http.{ Http, MultiPart }
 
+import scala.collection.mutable
 import scala.util.Try
 
 private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
@@ -73,6 +73,41 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       }.getOrElse(Nil)
 
     val request = Http(uri.toASCIIString).postMulti(parts: _*)
+      .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
+      .headers(hs)
+    val response = credentials
+      .map { case (u, p) => request.auth(u, p) }
+      .getOrElse(request).asBytes
+
+    if (response.code >= 200 && response.code < 300) DataverseResponse(response)
+    else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
+  }
+
+  protected def postFile2[D: Manifest](subPath: String, optFile: Option[File], optJsonMetadata: Option[String] = None): Try[DataverseResponse[D]] = {
+    trace(subPath, optFile, optJsonMetadata)
+    for {
+      uri <- createUri(Option(subPath))
+      response <- httpPostMulti2[D](uri, optFile, optJsonMetadata)
+    } yield response
+  }
+
+
+  private def httpPostMulti2[D: Manifest](uri: URI, optFile: Option[File], optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[DataverseResponse[D]] = Try {
+    trace(uri, optFile, optJsonMetadata, headers)
+
+    /*
+     * SWORD sends the API key through the user name of basic auth. The other APIs use the X-Dataverse-key.
+     */
+    val hs = if (!sendApiTokenViaBasicAuth) headers + (HEADER_X_DATAVERSE_KEY -> apiToken)
+             else headers
+    val credentials = if (sendApiTokenViaBasicAuth) Option(apiToken, "")
+                      else Option.empty
+
+    val partsBuffer = mutable.ListBuffer[MultiPart]()
+    optFile.foreach(f => partsBuffer.append(MultiPart(name = "file", filename = f.name, mime = MEDIA_TYPE_OCTET_STREAM, new FileInputStream(f.pathAsString), f.size, lenWritten => {}) ))
+    optJsonMetadata.foreach(md => partsBuffer.append(MultiPart(data = md.getBytes(StandardCharsets.UTF_8), name = "jsonData", filename = "jsonData", mime = MEDIA_TYPE_JSON)))
+
+    val request = Http(uri.toASCIIString).postMulti(partsBuffer.toList: _*)
       .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
       .headers(hs)
     val response = credentials

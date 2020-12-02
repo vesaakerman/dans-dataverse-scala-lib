@@ -19,10 +19,10 @@ import java.net.URI
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
-import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks, PrivateUrlData }
+import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks, PrivateUrlData }
 import nl.knaw.dans.lib.dataverse.model.{ DataMessage, Lock, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.DefaultFormats
+import org.json4s.{ DefaultFormats, Formats }
 import org.json4s.native.Serialization
 
 import scala.util.{ Failure, Try }
@@ -31,8 +31,8 @@ import scala.util.{ Failure, Try }
  * Functions that operate on a single dataset. See [[https://guides.dataverse.org/en/latest/api/native-api.html#datasets]].
  *
  */
-class Dataset private[dataverse](id: String, isPersistentId: Boolean, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
-  private implicit val jsonFormats: DefaultFormats = DefaultFormats
+class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boolean, configuration: DataverseInstanceConfig) extends HttpIdentifiedObjectSupport with DebugEnhancedLogging {
+  private implicit val jsonFormats: Formats = DefaultFormats
 
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
@@ -43,15 +43,19 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 
+  protected val endPointBase: String = "datasets"
+  protected val id: String = datasetId
+  protected val isPersistentId: Boolean = isPersistentDatasetId
+
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-json-representation-of-a-dataset]]
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-version-of-a-dataset]]
    * @param version version to view (optional)
    * @return
    */
-  def view(version: Version = Version.LATEST): Try[DataverseResponse[model.dataset.DatasetVersion]] = {
+  def view(version: Version = Version.LATEST): Try[DataverseResponse[DatasetVersion]] = {
     trace(version)
-    getVersioned[model.dataset.DatasetVersion]("", version)
+    getVersioned[DatasetVersion]("", version)
   }
 
   /**
@@ -61,9 +65,9 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-json-representation-of-a-dataset]]
    * @return
    */
-  def viewLatestVersion(): Try[DataverseResponse[model.dataset.DatasetLatestVersion]] = {
+  def viewLatestVersion(): Try[DataverseResponse[DatasetLatestVersion]] = {
     trace(())
-    getUnversioned[model.dataset.DatasetLatestVersion]("")
+    getUnversioned[DatasetLatestVersion]("")
   }
 
   /**
@@ -255,7 +259,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-the-private-url-for-a-dataset]]
    * @return
    */
-  def getPrivateUrl(): Try[DataverseResponse[PrivateUrlData]] = {
+  def getPrivateUrl: Try[DataverseResponse[PrivateUrlData]] = {
     trace(())
     getUnversioned("privateUrl")
   }
@@ -277,7 +281,7 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
    */
   def addFile(dataFile: File, fileMedataData: DataverseFile): Try[DataverseResponse[DataverseFile]] = {
     trace(dataFile, fileMedataData)
-    postFileUnversioned[DataverseFile]("add", dataFile, Option(Serialization.write(fileMedataData)))
+    postFileUnversioned[DataverseFile]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))
   }
 
   /**
@@ -292,19 +296,6 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   /*
    * Helper functions.
    */
-
-  private def getVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED): Try[DataverseResponse[D]] = {
-    trace(endPoint, version)
-    if (isPersistentId) super.get[D](s"datasets/:persistentId/versions/${
-      if (version == Version.UNSPECIFIED) ""
-      else version
-    }/${ endPoint }?persistentId=$id")
-    else super.get[D](s"datasets/$id/versions/${
-      if (version == Version.UNSPECIFIED) ""
-      else version
-    }/${ endPoint }")
-  }
-
   private def getUnversioned[D: Manifest](endPoint: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     trace(endPoint)
     if (isPersistentId) super.get[D](s"datasets/:persistentId/${ endPoint }/?persistentId=$id")
@@ -327,25 +318,16 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
     }/${ endPoint }$queryString")(body)
   }
 
-  private def postJsonUnversioned[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, queryParams)
-    if (isPersistentId) super.postJson[D](s"datasets/:persistentId/${ endPoint }?persistentId=$id${
-      if (queryString.nonEmpty) "&" + queryString
-      else ""
-    }")(body)
-    else super.postJson[D](s"datasets/$id/${ endPoint }$queryString")(body)
-  }
 
-  private def postFileUnversioned[D: Manifest](endPoint: String, file: File, metadata: Option[String], queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, queryParams)
-    if (isPersistentId) super.postFile[D](s"datasets/:persistentId/${ endPoint }?persistentId=$id${
-      if (queryString.nonEmpty) "&" + queryString
-      else ""
-    }", file, metadata)
-    else super.postFile[D](s"datasets/$id/${ endPoint }$queryString", file, metadata)
-  }
+//  private def postFileUnversioned[D: Manifest](endPoint: String, optFile: Option[File], optMetadata: Option[String], queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+//    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
+//    trace(endPoint, queryParams)
+//    if (isPersistentId) super.postFile2[D](s"datasets/:persistentId/${ endPoint }?persistentId=$id${
+//      if (queryString.nonEmpty) "&" + queryString
+//      else ""
+//    }", optFile, optMetadata)
+//    else super.postFile2[D](s"datasets/$id/${ endPoint }$queryString", optFile, optMetadata)
+//  }
 
   private def deleteVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")

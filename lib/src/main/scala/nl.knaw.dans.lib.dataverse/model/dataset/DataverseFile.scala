@@ -17,5 +17,5 @@ package nl.knaw.dans.lib.dataverse.model.dataset
 
 case class DataverseFile(description: Option[String] = None,
                          directoryLabel: Option[String] = None,
-                         restrict: Option[String] = Some("true"),
+                         restrict: Option[Boolean] = None,
                          categories: List[String] = List.empty[String])

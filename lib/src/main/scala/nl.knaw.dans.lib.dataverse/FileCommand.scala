@@ -18,12 +18,15 @@ package nl.knaw.dans.lib.dataverse
 import java.net.URI
 
 import better.files.File
+import nl.knaw.dans.lib.dataverse.model.dataset.DataverseFile
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.json4s.{ DefaultFormats, Formats }
+import org.json4s.native.Serialization
 import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class FileCommand private[dataverse](id: String, isPersistentId: Boolean, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+class FileCommand private[dataverse](filedId: String, isPersistentFileId: Boolean, configuration: DataverseInstanceConfig) extends HttpIdentifiedObjectSupport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
@@ -32,4 +35,23 @@ class FileCommand private[dataverse](id: String, isPersistentId: Boolean, config
   protected val unblockKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
+
+  protected val endPointBase: String = "files"
+  protected val id: String = filedId
+  protected val isPersistentId: Boolean = isPersistentFileId
+
+  private implicit val jsonFormats: Formats = DefaultFormats
+
+  /**
+   * Unfortunately, the body of the response is not valid JSON.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#updating-file-metadata]]
+   * @param fm file metadata
+   * @return
+   */
+  def updateMetadata(fm: DataverseFile): Try[DataverseResponse[Nothing]] = {
+    trace(fm)
+    postFileUnversioned[Nothing]("metadata", optFile = None, optMetadata = Option(Serialization.write(fm)))
+  }
+
 }
