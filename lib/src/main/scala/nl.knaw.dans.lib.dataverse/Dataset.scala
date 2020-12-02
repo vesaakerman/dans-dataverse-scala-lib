@@ -20,7 +20,7 @@ import java.net.URI
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks, PrivateUrlData }
-import nl.knaw.dans.lib.dataverse.model.{ DataMessage, RoleAssignment, RoleAssignmentReadOnly }
+import nl.knaw.dans.lib.dataverse.model.{ DataMessage, Lock, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
@@ -278,6 +278,15 @@ class Dataset private[dataverse](id: String, isPersistentId: Boolean, configurat
   def addFile(dataFile: File, fileMedataData: DataverseFile): Try[DataverseResponse[DataverseFile]] = {
     trace(dataFile, fileMedataData)
     postFileUnversioned[DataverseFile]("add", dataFile, Option(Serialization.write(fileMedataData)))
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#dataset-locks]]
+   * @return
+   */
+  def getLocks: Try[DataverseResponse[List[Lock]]] = {
+    trace(())
+    getUnversioned[List[Lock]]("locks")
   }
 
   /*
