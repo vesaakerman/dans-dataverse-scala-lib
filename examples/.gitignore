@@ -1,0 +1,17 @@
+/target/
+/site/
+/pom.xml.tag
+/pom.xml.releaseBackup
+/pom.xml.versionsBackup
+/pom.xml.next
+/release.properties
+/dependency-reduced-pom.xml
+/buildNumber.properties
+/dataverse.properties
+*.class
+*~
+*.swp
+*.iml
+*.sc
+/.idea/
+.DS_Store

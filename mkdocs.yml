@@ -25,6 +25,7 @@ repo_url: https://github.com/DANS-KNAW/dans-dataverse-scala-lib
 nav:
   - Manual: index.md
   - API: api.md
+  - Examples: examples.md
 
 plugins:
   - markdownextradata
