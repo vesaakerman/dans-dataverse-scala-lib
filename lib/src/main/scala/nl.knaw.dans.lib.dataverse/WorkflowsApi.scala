@@ -17,29 +17,23 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
+import nl.knaw.dans.lib.dataverse.model.DataMessage
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class Admin private[dataverse] (configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+class WorkflowsApi private[dataverse](configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
   protected val sendApiTokenViaBasicAuth = false
-  protected val unblockKey: Option[String] = configuration.unblockKey
-  protected val apiPrefix: String = ""
-  protected val apiVersion: Option[String] = Option.empty // No version allowed here
-  /**
-   * Returns the account data for a single user.
-   *
-   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-single-user]]
-   * @param id the user ID
-   * @return
-   */
-  def getSingleUser(id: String): Try[DataverseResponse[model.User]] = {
-    trace(id)
-    get[model.User](s"api/admin/authenticatedUsers/$id")
-  }
+  protected val unblockKey: Option[String] = Option.empty
+  protected val apiPrefix: String = "api"
+  protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 
+  def resume(invocationId: String): Try[DataverseResponse[DataMessage]] = {
+    postText(s"workflows/$invocationId")(body = "")
+  }
 }

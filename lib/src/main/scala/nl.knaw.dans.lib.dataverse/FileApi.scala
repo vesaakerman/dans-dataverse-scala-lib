@@ -17,13 +17,16 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
-import nl.knaw.dans.lib.dataverse.model.DataMessage
+import better.files.File
+import nl.knaw.dans.lib.dataverse.model.dataset.DataverseFile
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.json4s.{ DefaultFormats, Formats }
+import org.json4s.native.Serialization
 import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class Workflows private[dataverse](configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, configuration: DataverseInstanceConfig) extends HttpIdentifiedObjectSupport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
@@ -33,7 +36,22 @@ class Workflows private[dataverse](configuration: DataverseInstanceConfig) exten
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 
-  def resume(invocationId: String): Try[DataverseResponse[DataMessage]] = {
-    postText(s"workflows/$invocationId")(body = "")
+  protected val endPointBase: String = "files"
+  protected val id: String = filedId
+  protected val isPersistentId: Boolean = isPersistentFileId
+
+  private implicit val jsonFormats: Formats = DefaultFormats
+
+  /**
+   * Unfortunately, the body of the response is not valid JSON.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#updating-file-metadata]]
+   * @param fm file metadata
+   * @return
+   */
+  def updateMetadata(fm: DataverseFile): Try[DataverseResponse[Nothing]] = {
+    trace(fm)
+    postFile2[Nothing]("metadata", optFile = None, optMetadata = Option(Serialization.write(fm)))
   }
+
 }

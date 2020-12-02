@@ -15,23 +15,22 @@
  */
 package nl.knaw.dans.lib.dataverse
 
-import java.net.URI
-
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks, PrivateUrlData }
 import nl.knaw.dans.lib.dataverse.model.{ DataMessage, Lock, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.{ DefaultFormats, Formats }
 import org.json4s.native.Serialization
+import org.json4s.{ DefaultFormats, Formats }
 
+import java.net.URI
 import scala.util.{ Failure, Try }
 
 /**
  * Functions that operate on a single dataset. See [[https://guides.dataverse.org/en/latest/api/native-api.html#datasets]].
  *
  */
-class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boolean, configuration: DataverseInstanceConfig) extends HttpIdentifiedObjectSupport with DebugEnhancedLogging {
+class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Boolean, configuration: DataverseInstanceConfig) extends HttpIdentifiedObjectSupport with DebugEnhancedLogging {
   private implicit val jsonFormats: Formats = DefaultFormats
 
   protected val connectionTimeout: Int = configuration.connectionTimeout
@@ -59,7 +58,7 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
   }
 
   /**
-   * Almost the same as [[Dataset#view]] except that `viewLatestVersion` returns a JSON object that starts at the dataset
+   * Almost the same as [[DatasetApi#view]] except that `viewLatestVersion` returns a JSON object that starts at the dataset
    * level instead of the dataset version level. The dataset level contains some fields, most of which are replicated at the dataset version level, however.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-json-representation-of-a-dataset]]
@@ -101,7 +100,7 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    * @param version the version of the dataset
    * @return
    */
-  def listFiles(version: Version = Version.UNSPECIFIED): Try[DataverseResponse[List[DataverseFile]]] = {
+  def listFiles(version: Version = Version.LATEST): Try[DataverseResponse[List[DataverseFile]]] = {
     trace(version)
     getVersioned[List[DataverseFile]]("files", version)
   }
@@ -111,7 +110,7 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    * @param version the version of the dataset
    * @return a map of metadata block identifier to metadata block
    */
-  def listMetadataBlocks(version: Version = Version.UNSPECIFIED): Try[DataverseResponse[Map[String, MetadataBlock]]] = {
+  def listMetadataBlocks(version: Version = Version.LATEST): Try[DataverseResponse[Map[String, MetadataBlock]]] = {
     trace((version))
     getVersioned[Map[String, MetadataBlock]]("metadata", version)
   }
@@ -122,7 +121,7 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    * @param version the version of the dataset
    * @return
    */
-  def getMetadataBlock(name: String, version: Version = Version.UNSPECIFIED): Try[DataverseResponse[MetadataBlock]] = {
+  def getMetadataBlock(name: String, version: Version = Version.LATEST): Try[DataverseResponse[MetadataBlock]] = {
     trace(name, version)
     getVersioned[MetadataBlock](s"metadata/$name", version)
   }
@@ -136,7 +135,8 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    */
   def updateMetadata(metadataBlocks: MetadataBlocks): Try[DataverseResponse[DatasetVersion]] = {
     trace(metadataBlocks)
-    putVersioned[DatasetVersion]("", Serialization.write(Map("metadataBlocks" -> metadataBlocks)), Version.DRAFT)
+    // Cheating with endPoint here, because the only version that can be updated is :draft anyway
+    put2[DatasetVersion]("versions/:draft", Serialization.write(Map("metadataBlocks" -> metadataBlocks)))
   }
 
   /**
@@ -150,8 +150,10 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    */
   def editMetadata(fields: FieldList, replace: Boolean = true): Try[DataverseResponse[DatasetVersion]] = {
     trace(fields)
-    putVersioned("editMetadata", Serialization.write(fields), Version.UNSPECIFIED, if (replace) Map("replace" -> "true")
-                                                                                   else Map.empty) // Sic! any value for "replace" is interpreted by Dataverse as "true", even "replace=false"
+    put2("editMetadata",
+      Serialization.write(fields),
+      if (replace) Map("replace" -> "true")
+      else Map.empty) // Sic! any value for "replace" is interpreted by Dataverse as "true", even "replace=false"
   }
 
   /**
@@ -164,7 +166,7 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    */
   def deleteMetadata(fields: FieldList): Try[DataverseResponse[DatasetVersion]] = {
     trace(fields)
-    putVersioned("deleteMetadata", Serialization.write(fields), Version.UNSPECIFIED)
+    put2("deleteMetadata", Serialization.write(fields))
   }
 
   /**
@@ -176,7 +178,7 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    */
   def publish(updateType: UpdateType): Try[DataverseResponse[DatasetVersion]] = {
     trace(updateType)
-    postJsonUnversioned[DatasetVersion]("actions/:publish", "", Map("type" -> updateType.toString))
+    postJson2[DatasetVersion]("actions/:publish", "", Map("type" -> updateType.toString))
   }
 
   /**
@@ -202,7 +204,7 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    */
   def setCitationDateField(fieldName: String): Try[DataverseResponse[DataMessage]] = {
     trace(fieldName)
-    putVersioned("citationdate", fieldName)
+    put2("citationdate", fieldName)
   }
 
   /**
@@ -231,11 +233,11 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    */
   def assignRole(roleAssignment: RoleAssignment): Try[DataverseResponse[RoleAssignmentReadOnly]] = {
     trace(roleAssignment)
-    postJsonUnversioned[RoleAssignmentReadOnly]("assignments", Serialization.write(roleAssignment))
+    postJson2[RoleAssignmentReadOnly]("assignments", Serialization.write(roleAssignment))
   }
 
   /**
-   * Use [[Dataset#listRoleAssignments]] to get the ID.
+   * Use [[DatasetApi#listRoleAssignments]] to get the ID.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-role-assignment-from-a-dataset]]
    * @param assignmentId the ID of the assignment to delete
@@ -252,7 +254,7 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    */
   def createPrivateUrl(): Try[DataverseResponse[PrivateUrlData]] = {
     trace(())
-    postJsonUnversioned[PrivateUrlData]("privateUrl", "")
+    postJson2[PrivateUrlData]("privateUrl", "")
   }
 
   /**
@@ -281,7 +283,7 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
    */
   def addFile(dataFile: File, fileMedataData: DataverseFile): Try[DataverseResponse[DataverseFile]] = {
     trace(dataFile, fileMedataData)
-    postFileUnversioned[DataverseFile]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))
+    postFile[DataverseFile]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))
   }
 
   /**
@@ -291,57 +293,5 @@ class Dataset private[dataverse](datasetId: String, isPersistentDatasetId: Boole
   def getLocks: Try[DataverseResponse[List[Lock]]] = {
     trace(())
     getUnversioned[List[Lock]]("locks")
-  }
-
-  /*
-   * Helper functions.
-   */
-  private def getUnversioned[D: Manifest](endPoint: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    trace(endPoint)
-    if (isPersistentId) super.get[D](s"datasets/:persistentId/${ endPoint }/?persistentId=$id")
-    else super.get[D](s"datasets/$id/${ endPoint }")
-  }
-
-  private def putVersioned[D: Manifest](endPoint: String, body: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, body, version, queryParams)
-    if (isPersistentId) super.put[D](s"datasets/:persistentId/${
-      if (version == Version.UNSPECIFIED) ""
-      else s"versions/$version"
-    }/${ endPoint }?persistentId=$id${
-      if (queryString.nonEmpty) "&" + queryString
-      else ""
-    }")(body)
-    else super.put[D](s"datasets/$id/${
-      if (version == Version.UNSPECIFIED) ""
-      else s"versions/$version"
-    }/${ endPoint }$queryString")(body)
-  }
-
-
-//  private def postFileUnversioned[D: Manifest](endPoint: String, optFile: Option[File], optMetadata: Option[String], queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-//    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-//    trace(endPoint, queryParams)
-//    if (isPersistentId) super.postFile2[D](s"datasets/:persistentId/${ endPoint }?persistentId=$id${
-//      if (queryString.nonEmpty) "&" + queryString
-//      else ""
-//    }", optFile, optMetadata)
-//    else super.postFile2[D](s"datasets/$id/${ endPoint }$queryString", optFile, optMetadata)
-//  }
-
-  private def deleteVersioned[D: Manifest](endPoint: String, version: Version = Version.UNSPECIFIED, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, version, queryParams)
-    if (isPersistentId) super.deletePath[D](s"datasets/:persistentId/${
-      if (version == Version.UNSPECIFIED) ""
-      else s"versions/$version"
-    }/${ endPoint }?persistentId=$id${
-      if (queryString.nonEmpty) "&" + queryString
-      else ""
-    }")
-    else super.deletePath[D](s"datasets/$id/${
-      if (version == Version.UNSPECIFIED) ""
-      else s"versions/$version"
-    }/${ endPoint }$queryString")
   }
 }

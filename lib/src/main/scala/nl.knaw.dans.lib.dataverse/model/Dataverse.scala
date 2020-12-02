@@ -26,4 +26,3 @@ case class Dataverse(id: Option[Int] = None,
                      dataverseType: String,
                      storageDriverLabel: Option[String] = None)
 
-case class DataverseContact(displayOrder: Option[Int] = None, contactEmail: String)

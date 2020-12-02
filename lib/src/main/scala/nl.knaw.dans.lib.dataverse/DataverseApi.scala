@@ -26,7 +26,7 @@ import scalaj.http.HttpResponse
 
 import scala.util.Try
 
-class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+class DataverseApi private[dataverse](dvId: String, configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
   trace(dvId)
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
@@ -224,7 +224,7 @@ class Dataverse private[dataverse](dvId: String, configuration: DataverseInstanc
   }
 
   /**
-   * Use [[Dataverse#listRoleAssignments]] to get the ID.
+   * Use [[DataverseApi#listRoleAssignments]] to get the ID.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-role-assignment-from-a-dataverse]]
    * @param assignmentId the ID of the assignment to delete

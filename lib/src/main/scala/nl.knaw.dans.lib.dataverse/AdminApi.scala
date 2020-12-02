@@ -21,25 +21,25 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.util.Try
 
-class Sword private[dataverse](configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
-  trace(())
+class AdminApi private[dataverse](configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
-  protected val apiPrefix: String = "dvn/api/data-deposit"
-  protected val sendApiTokenViaBasicAuth = true
-  protected val unblockKey: Option[String] = Option.empty
-  protected val apiVersion: Option[String] = Option("1.1") // TODO: Make configurable?
-
+  protected val sendApiTokenViaBasicAuth = false
+  protected val unblockKey: Option[String] = configuration.unblockKey
+  protected val apiPrefix: String = ""
+  protected val apiVersion: Option[String] = Option.empty // No version allowed here
   /**
-   * Deletes a file from the current draft of the dataset. To look up the databaseId use [[Dataset#listFiles]].
+   * Returns the account data for a single user.
    *
-   * @see [[https://guides.dataverse.org/en/latest/api/sword.html#delete-a-file-by-database-id]]
-   * @param databaseId the database ID of the file to delete
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#list-single-user]]
+   * @param id the user ID
    * @return
    */
-  def deleteFile(databaseId: Int): Try[DataverseResponse[Nothing]] = {
-    deletePath[Nothing](s"swordv2/edit-media/file/${ databaseId }")
+  def getSingleUser(id: String): Try[DataverseResponse[model.User]] = {
+    trace(id)
+    get[model.User](s"api/admin/authenticatedUsers/$id")
   }
+
 }

@@ -48,51 +48,15 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   protected val apiPrefix: String
   protected val apiVersion: Option[String]
 
-  protected def postFile[D: Manifest](subPath: String, file: File, optJsonMetadata: Option[String] = None): Try[DataverseResponse[D]] = {
-    trace(subPath, file, optJsonMetadata)
-    for {
-      uri <- createUri(Option(subPath))
-      response <- httpPostMulti[D](uri, file, optJsonMetadata)
-    } yield response
-  }
-
-  private def httpPostMulti[D: Manifest](uri: URI, file: File, optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[DataverseResponse[D]] = Try {
-    trace(uri, file, optJsonMetadata, headers)
-
-    /*
-     * SWORD sends the API key through the user name of basic auth. The other APIs use the X-Dataverse-key.
-     */
-    val hs = if (!sendApiTokenViaBasicAuth) headers + (HEADER_X_DATAVERSE_KEY -> apiToken)
-             else headers
-    val credentials = if (sendApiTokenViaBasicAuth) Option(apiToken, "")
-                      else Option.empty
-
-    val parts = MultiPart(name = "file", filename = file.name, mime = MEDIA_TYPE_OCTET_STREAM, new FileInputStream(file.pathAsString), file.size, lenWritten => {}) +:
-      optJsonMetadata.map {
-        json => List(MultiPart(data = json.getBytes(StandardCharsets.UTF_8), name = "jsonData", filename = "jsonData", mime = MEDIA_TYPE_JSON))
-      }.getOrElse(Nil)
-
-    val request = Http(uri.toASCIIString).postMulti(parts: _*)
-      .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
-      .headers(hs)
-    val response = credentials
-      .map { case (u, p) => request.auth(u, p) }
-      .getOrElse(request).asBytes
-
-    if (response.code >= 200 && response.code < 300) DataverseResponse(response)
-    else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
-  }
-
-  protected def postFile2[D: Manifest](subPath: String, optFile: Option[File], optJsonMetadata: Option[String] = None): Try[DataverseResponse[D]] = {
+  protected def postFile[D: Manifest](subPath: String, optFile: Option[File], optJsonMetadata: Option[String] = None): Try[DataverseResponse[D]] = {
     trace(subPath, optFile, optJsonMetadata)
     for {
       uri <- createUri(Option(subPath))
-      response <- httpPostMulti2[D](uri, optFile, optJsonMetadata)
+      response <- httpPostMulti[D](uri, optFile, optJsonMetadata)
     } yield response
   }
 
-
-  private def httpPostMulti2[D: Manifest](uri: URI, optFile: Option[File], optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[DataverseResponse[D]] = Try {
+  private def httpPostMulti[D: Manifest](uri: URI, optFile: Option[File], optJsonMetadata: Option[String] = None, headers: Map[String, String] = Map()): Try[DataverseResponse[D]] = Try {
     trace(uri, optFile, optJsonMetadata, headers)
 
     /*

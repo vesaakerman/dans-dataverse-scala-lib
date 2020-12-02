@@ -29,35 +29,35 @@ class DataverseInstance(config: DataverseInstanceConfig) extends DebugEnhancedLo
     }
   }
 
-  def dataverse(dvId: String): Dataverse = {
-    new Dataverse(dvId: String, config)
+  def dataverse(dvId: String): DataverseApi = {
+    new DataverseApi(dvId: String, config)
   }
 
-  def dataset(pid: String): Dataset = {
-    new Dataset(pid, isPersistentDatasetId = true, config)
+  def dataset(pid: String): DatasetApi = {
+    new DatasetApi(pid, isPersistentDatasetId = true, config)
   }
 
-  def dataset(id: Int): Dataset = {
-    new Dataset(id.toString, isPersistentDatasetId = false, config)
+  def dataset(id: Int): DatasetApi = {
+    new DatasetApi(id.toString, isPersistentDatasetId = false, config)
   }
 
-  def admin(): Admin = {
-    new Admin(config)
+  def admin(): AdminApi = {
+    new AdminApi(config)
   }
 
-  def sword(): Sword = {
-    new Sword(config)
+  def sword(): SwordApi = {
+    new SwordApi(config)
   }
 
-  def file(pid: String): FileCommand = {
-    new FileCommand(pid, isPersistentFileId = true, config)
+  def file(pid: String): FileApi = {
+    new FileApi(pid, isPersistentFileId = true, config)
   }
 
-  def file(id: Int): FileCommand = {
-    new FileCommand(id.toString, isPersistentFileId = false, config)
+  def file(id: Int): FileApi = {
+    new FileApi(id.toString, isPersistentFileId = false, config)
   }
 
-  def workflows(): Workflows = {
-    new Workflows(config)
+  def workflows(): WorkflowsApi = {
+    new WorkflowsApi(config)
   }
 }

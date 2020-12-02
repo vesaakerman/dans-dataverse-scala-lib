@@ -13,19 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib.dataverse
+package nl.knaw.dans.lib.dataverse.model
 
-case class Version(v: String) {
-  override def toString: String = v
-}
-
-object Version {
-  def apply(major: Int, minor: Int): Version = {
-    Version(s"$major.$minor")
-  }
-
-  val DRAFT: Version = Version(":draft")
-  val LATEST: Version = Version(":latest")
-  val LATEST_PUBLISHED: Version = Version(":latest-published")
-  val UNSPECIFIED: Version = Version("") // TODO: REMOVE?
-}
+case class DataverseContact(displayOrder: Option[Int] = None, contactEmail: String)
