@@ -36,7 +36,7 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 
-  protected val endPointBase: String = "files"
+  protected val targetBase: String = "files"
   protected val id: String = filedId
   protected val isPersistentId: Boolean = isPersistentFileId
 
@@ -51,7 +51,7 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
    */
   def updateMetadata(fm: DataverseFile): Try[DataverseResponse[Nothing]] = {
     trace(fm)
-    postFile2[Nothing]("metadata", optFile = None, optMetadata = Option(Serialization.write(fm)))
+    postFileToTarget[Nothing]("metadata", optFile = None, optMetadata = Option(Serialization.write(fm)))
   }
 
 }

@@ -20,10 +20,13 @@ import org.json4s.{ DefaultFormats, Formats }
 
 import scala.util.Try
 
-trait TargetedHttpSuport extends HttpSupport {
+/**
+ * HTTP support that targets a specific type of object, such as datasets. The target is specified with an ID.
+ */
+private[dataverse] trait TargetedHttpSuport extends HttpSupport {
   private implicit val jsonFormats: Formats = DefaultFormats
 
-  protected val endPointBase: String
+  protected val targetBase: String
   protected val id: String
   protected val isPersistentId: Boolean
 
@@ -35,10 +38,10 @@ trait TargetedHttpSuport extends HttpSupport {
    * @tparam D the type of model object to expect in the response message
    * @return
    */
-  protected def getVersioned[D: Manifest](endPoint: String, version: Version = Version.LATEST): Try[DataverseResponse[D]] = {
+  protected def getVersionedFromTarget[D: Manifest](endPoint: String, version: Version = Version.LATEST): Try[DataverseResponse[D]] = {
     trace(endPoint, version)
-    if (isPersistentId) super.get[D](s"${ endPointBase }/:persistentId/versions/${ version }/${ endPoint }?persistentId=$id")
-    else super.get[D](s"${ endPointBase }/$id/versions/${ version }/${ endPoint }")
+    if (isPersistentId) super.get[D](s"${ targetBase }/:persistentId/versions/${ version }/${ endPoint }?persistentId=$id")
+    else super.get[D](s"${ targetBase }/$id/versions/${ version }/${ endPoint }")
   }
 
   /**
@@ -48,49 +51,49 @@ trait TargetedHttpSuport extends HttpSupport {
    * @tparam D the type of model object to expect in the response message
    * @return
    */
-  protected def getUnversioned[D: Manifest](endPoint: String): Try[DataverseResponse[D]] = {
+  protected def getUnversionedFromTarget[D: Manifest](endPoint: String): Try[DataverseResponse[D]] = {
     trace(endPoint)
-    if (isPersistentId) super.get[D](s"${ endPointBase }/:persistentId/${ endPoint }", Map("persistentId" -> id))
-    else super.get[D](s"${ endPointBase }/$id/${ endPoint }")
+    if (isPersistentId) super.get[D](s"${ targetBase }/:persistentId/${ endPoint }", Map("persistentId" -> id))
+    else super.get[D](s"${ targetBase }/$id/${ endPoint }")
   }
 
-  protected def postJson2[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+  protected def postJsonToTarget[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
     trace(endPoint, queryParams)
-    if (isPersistentId) super.postJson[D](s"${ endPointBase }/:persistentId/${ endPoint }?persistentId=$id${
+    if (isPersistentId) super.postJson[D](s"${ targetBase }/:persistentId/${ endPoint }?persistentId=$id${
       if (queryString.nonEmpty) "&" + queryString
       else ""
     }")(body)
-    else super.postJson[D](s"${ endPointBase }/$id/${ endPoint }$queryString")(body)
+    else super.postJson[D](s"${ targetBase }/$id/${ endPoint }$queryString")(body)
   }
 
-  protected def postFile2[D: Manifest](endPoint: String, optFile: Option[File], optMetadata: Option[String], queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+  protected def postFileToTarget[D: Manifest](endPoint: String, optFile: Option[File], optMetadata: Option[String], queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
     trace(endPoint, queryParams)
-    if (isPersistentId) super.postFile[D](s"${ endPointBase }/:persistentId/${ endPoint }?persistentId=$id${
+    if (isPersistentId) super.postFile[D](s"${ targetBase }/:persistentId/${ endPoint }?persistentId=$id${
       if (queryString.nonEmpty) "&" + queryString
       else ""
     }", optFile, optMetadata)
-    else super.postFile[D](s"${ endPointBase }/$id/${ endPoint }$queryString", optFile, optMetadata)
+    else super.postFile[D](s"${ targetBase }/$id/${ endPoint }$queryString", optFile, optMetadata)
   }
 
-  protected def put2[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+  protected def putToTarget[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
     trace(endPoint, body, queryParams)
-    if (isPersistentId) super.put[D](s"${ endPointBase }/:persistentId/${ endPoint }?persistentId=$id${
+    if (isPersistentId) super.put[D](s"${ targetBase }/:persistentId/${ endPoint }?persistentId=$id${
       if (queryString.nonEmpty) "&" + queryString
       else ""
     }")(body)
-    else super.put[D](s"${ endPointBase }/$id/${ endPoint }$queryString")(body)
+    else super.put[D](s"${ targetBase }/$id/${ endPoint }$queryString")(body)
   }
 
-  protected def delete2[D: Manifest](endPoint: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+  protected def deleteAtTarget[D: Manifest](endPoint: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
     trace(endPoint, queryParams)
-    if (isPersistentId) super.deletePath[D](s"${ endPointBase }/:persistentId/${ endPoint }?persistentId=$id${
+    if (isPersistentId) super.deletePath[D](s"${ targetBase }/:persistentId/${ endPoint }?persistentId=$id${
       if (queryString.nonEmpty) "&" + queryString
       else ""
     }")
-    else super.deletePath[D](s"${ endPointBase }/$id/${ endPoint }$queryString")
+    else super.deletePath[D](s"${ targetBase }/$id/${ endPoint }$queryString")
   }
 }

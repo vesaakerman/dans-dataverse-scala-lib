@@ -25,6 +25,9 @@ import scalaj.http.{ Http, MultiPart }
 import scala.collection.mutable
 import scala.util.Try
 
+/**
+ * Functions supporting HTTP interaction with Dataverse.
+ */
 private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   private val HEADER_CONTENT_TYPE = "Content-Type"
   private val HEADER_X_DATAVERSE_KEY = "X-Dataverse-key"
