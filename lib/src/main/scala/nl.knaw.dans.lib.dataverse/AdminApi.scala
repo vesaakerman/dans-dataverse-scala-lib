@@ -17,6 +17,7 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
+import nl.knaw.dans.lib.dataverse.model.DatabaseSetting
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.util.Try
@@ -47,11 +48,32 @@ class AdminApi private[dataverse](configuration: DataverseInstanceConfig) extend
   /**
    * @see [[https://guides.dataverse.org/en/latest/installation/config.html#database-settings]]
    * @param settingName the name of the setting
-   * @param value the value to set
+   * @param value       the value to set
    * @return
    */
-  def putDatabaseSetting(settingName: String, value: String): Try[DataverseResponse[Nothing]] = {
+  def putDatabaseSetting(settingName: String, value: String): Try[DataverseResponse[DatabaseSetting]] = {
     trace(settingName, value)
-    put[Nothing](s"api/admin/settings/${settingName}")(value)
+    put[DatabaseSetting](s"api/admin/settings/${ settingName }")(value)
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/installation/config.html#database-settings]]
+   * @param settingName the name of the setting
+   * @param value       the boolean value to set
+   * @return
+   */
+  def putDatabaseSetting(settingName: String, value: Boolean): Try[DataverseResponse[DatabaseSetting]] = {
+    trace(settingName, value)
+    putDatabaseSetting(settingName, value.toString)
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/installation/config.html#database-settings]]
+   * @param settingName the name of the setting
+   * @return
+   */
+  def deleteDatabaseSetting(settingName: String): Try[DataverseResponse[Nothing]] = {
+    trace(settingName)
+    deletePath[Nothing](s"api/admin/setting/${ settingName }")
   }
 }

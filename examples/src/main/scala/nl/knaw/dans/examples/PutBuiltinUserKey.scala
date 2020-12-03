@@ -13,27 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib.dataverse
+package nl.knaw.dans.examples
 
-/**
- * Classes that model the JSON objects that Dataverse produces and consumes.
- *
- * TODO: add few simple examples.
- */
-package object model {
-  type DatabaseSetting = (String, String)
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
-  /**
-   * Enumeration of the default roles that can be assigned.
-   *
-   * Note: if you are using the API directly, the role names are all lowercase.
-   */
-  object DefaultRole extends Enumeration {
-    type DefaultRole = Value
-    val curator, contributor, none = Value
-  }
-
-
-
+object PutBuiltinUserKey extends App with DebugEnhancedLogging with BaseApp {
+  val result = for {
+    response <- server.admin().putDatabaseSetting("BuiltinUsers.KEY", props.getString("builtinUserKey"))
+    _ = logger.info(s"Raw response message: ${ response.string }")
+  } yield ()
+  logger.info(s"result = $result")
 }
-
