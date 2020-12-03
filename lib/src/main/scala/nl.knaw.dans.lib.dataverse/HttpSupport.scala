@@ -49,6 +49,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   // If false, it is sent through the X-Dataverse-key header
   protected val sendApiTokenViaBasicAuth: Boolean
   protected val unblockKey: Option[String]
+  protected val builtinUserKey: Option[String]
   protected val apiPrefix: String
   protected val apiVersion: Option[String]
 
@@ -94,11 +95,11 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     } yield response
   }
 
-  protected def postJson[D: Manifest](subPath: String = null)(body: String = null): Try[DataverseResponse[D]] = {
+  protected def postJson[D: Manifest](subPath: String = null)(body: String = null, params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     trace(subPath, body)
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D](METHOD_POST, uri, body, Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_JSON))
+      response <- http[D](METHOD_POST, uri, body, Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_JSON), params)
     } yield response
   }
 

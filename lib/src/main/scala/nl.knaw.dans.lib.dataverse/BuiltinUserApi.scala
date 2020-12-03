@@ -17,39 +17,41 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
-import nl.knaw.dans.lib.dataverse.model.file.FileInfo
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
+import org.json4s.native.Serialization
 
 import scala.util.Try
 
-class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, configuration: DataverseInstanceConfig) extends TargetedHttpSuport with DebugEnhancedLogging {
+/**
+ * Functions to manage builtin user accounts. Note that the [[`BuiltinUsers.KEY` https://guides.dataverse.org/en/5.2/installation/config.html#builtinusers-key]]
+ * must be set and configured in [[DataverseInstanceConfig]] for this to work.
+ *
+ * @param configuration the dataverse instance configuration
+ */
+class BuiltinUserApi private[dataverse](configuration: DataverseInstanceConfig) extends HttpSupport with DebugEnhancedLogging {
+  trace(())
+  private implicit val jsonFormats: Formats = DefaultFormats
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
   protected val apiToken: String = configuration.apiToken
   protected val sendApiTokenViaBasicAuth = false
   protected val unblockKey: Option[String] = Option.empty
-  protected val builtinUserKey: Option[String] = Option.empty
+  protected val builtinUserKey: Option[String] = configuration.builtinUserKey
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 
-  protected val targetBase: String = "files"
-  protected val id: String = filedId
-  protected val isPersistentId: Boolean = isPersistentFileId
-
-  private implicit val jsonFormats: Formats = DefaultFormats
-
   /**
-   * Unfortunately, the body of the response is not valid JSON.
-   *
-   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#updating-file-metadata]]
-   * @param fm file metadata
+   * @see [[https://guides.dataverse.org/en/5.2/api/native-api.html#create-a-builtin-user]]
+   * @param user the user account info
+   * @param password the password to set for the new user
    * @return
    */
-  def updateMetadata(fm: FileInfo): Try[DataverseResponse[Nothing]] = {
-    trace(fm)
-    postFileToTarget[Nothing]("metadata", optFile = None, optMetadata = Option(Serialization.write(fm)))
+  def create(user: model.BuiltinUser, password: String): Try[DataverseResponse[Any]] = {
+    postJson[Any]("builtin-users")(Serialization.write(user), Map("password" -> password, "key" -> builtinUserKey.getOrElse("")))
   }
+
+
+
 }

@@ -33,21 +33,9 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
   protected val apiToken: String = configuration.apiToken
   protected val sendApiTokenViaBasicAuth = false
   protected val unblockKey: Option[String] = Option.empty
+  protected val builtinUserKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
-
-  /**
-   * Creates a dataverse based on a definition provided in a JSON file.
-   *
-   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-dataverse]]
-   * @param jsonFile the JSON file with the dataverse definition
-   * @return
-   */
-  def create(jsonFile: File): Try[DataverseResponse[model.Dataverse]] = {
-    trace(jsonFile)
-    tryReadFileToString(jsonFile)
-      .flatMap(postJson[model.Dataverse](s"dataverses/$dvId"))
-  }
 
   /**
    * Creates a dataverse base on a definition provided as model object.
@@ -106,20 +94,6 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
   def listRoles(): Try[DataverseResponse[List[Role]]] = {
     trace(())
     get[List[Role]](s"dataverses/$dvId/roles")
-  }
-
-  // DataverseResponse[DataMessage]
-
-  /**
-   * Creates a role based on a definition provided in a JSON file.
-   *
-   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-new-role-in-a-dataverse]]
-   * @param jsonFile the JSON file with the role definition
-   * @return
-   */
-  def createRole(jsonFile: File): Try[DataverseResponse[Role]] = {
-    trace(jsonFile)
-    tryReadFileToString(jsonFile).flatMap(postJson[Role](s"dataverses/$dvId/roles"))
   }
 
   /**
@@ -197,16 +171,6 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
   def setDefaultRole(role: DefaultRole): Try[DataverseResponse[Nothing]] = {
     trace(role)
     put[Nothing](s"dataverses/$dvId/defaultContributorRole/$role")(null)
-  }
-
-  /**
-   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#assign-a-new-role-on-a-dataverse]]
-   * @param jsonFile file containing the role assignment JSON object
-   * @return
-   */
-  def assignRole(jsonFile: File): Try[DataverseResponse[RoleAssignmentReadOnly]] = {
-    trace(jsonFile)
-    tryReadFileToString(jsonFile).flatMap(postJson[RoleAssignmentReadOnly](s"dataverses/$dvId/assignments"))
   }
 
   /**
@@ -289,16 +253,6 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
       jsonString <- serializeAsJson(dataset, logger.underlying.isDebugEnabled)
       response <- postJson[DatasetCreationResult](s"dataverses/$dvId/datasets")(jsonString)
     } yield response
-  }
-
-  /**
-   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-a-dataset-in-a-dataverse]]
-   * @param jsonFile JSON file defining the dataset
-   * @return
-   */
-  def createDataset(jsonFile: File): Try[DataverseResponse[DatasetCreationResult]] = {
-    trace(jsonFile)
-    tryReadFileToString(jsonFile).flatMap(postJson[DatasetCreationResult](s"dataverses/$dvId/datasets"))
   }
 
   /**

@@ -13,20 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib.dataverse.model
+package nl.knaw.dans.examples
 
-case class User(id: Int,
-                identifier: String,
-                displayName: String,
-                firstName: String,
-                lastName: String,
-                email: String,
-                superuser: Boolean,
-                affiliation: String,
-                position: String,
-                persistentUserId: String,
-                createdTime: String,
-                lastLoginTime: String,
-                lastApiUseTime: String,
-                authenticationProviderId: String)
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
+object SetBuiltinUserKey extends App with DebugEnhancedLogging with BaseApp {
+  val result = for {
+    response <- server.admin().putDatabaseSetting("BuiltinUsers.KEY", props.getString("builtinUserKey"))
+    _ = logger.info(s"Raw response message: ${ response.string }")
+  } yield ()
+  logger.info(s"result = $result")
+}

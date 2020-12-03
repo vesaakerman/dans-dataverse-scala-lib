@@ -45,6 +45,10 @@ class DataverseInstance(config: DataverseInstanceConfig) extends DebugEnhancedLo
     new AdminApi(config)
   }
 
+  def builtinUser(): BuiltinUserApi = {
+    new BuiltinUserApi(config)
+  }
+
   def sword(): SwordApi = {
     new SwordApi(config)
   }

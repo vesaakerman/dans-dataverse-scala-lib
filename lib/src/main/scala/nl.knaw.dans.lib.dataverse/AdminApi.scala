@@ -28,6 +28,7 @@ class AdminApi private[dataverse](configuration: DataverseInstanceConfig) extend
   protected val apiToken: String = configuration.apiToken
   protected val sendApiTokenViaBasicAuth = false
   protected val unblockKey: Option[String] = configuration.unblockKey
+  protected val builtinUserKey: Option[String] = Option.empty
   protected val apiPrefix: String = ""
   protected val apiVersion: Option[String] = Option.empty // No version allowed here
 
@@ -38,8 +39,19 @@ class AdminApi private[dataverse](configuration: DataverseInstanceConfig) extend
    * @param id the user ID
    * @return
    */
-  def getSingleUser(id: String): Try[DataverseResponse[model.User]] = {
+  def getSingleUser(id: String): Try[DataverseResponse[model.AuthenticatedUser]] = {
     trace(id)
-    get[model.User](s"api/admin/authenticatedUsers/$id")
+    get[model.AuthenticatedUser](s"api/admin/authenticatedUsers/$id")
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/installation/config.html#database-settings]]
+   * @param settingName the name of the setting
+   * @param value the value to set
+   * @return
+   */
+  def putDatabaseSetting(settingName: String, value: String): Try[DataverseResponse[Nothing]] = {
+    trace(settingName, value)
+    put[Nothing](s"api/admin/settings/${settingName}")(value)
   }
 }

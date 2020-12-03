@@ -30,6 +30,7 @@ class SwordApi private[dataverse](configuration: DataverseInstanceConfig) extend
   protected val apiPrefix: String = "dvn/api/data-deposit"
   protected val sendApiTokenViaBasicAuth = true
   protected val unblockKey: Option[String] = Option.empty
+  protected val builtinUserKey: Option[String] = Option.empty
   protected val apiVersion: Option[String] = Option("1.1") // TODO: Make configurable?
 
   /**

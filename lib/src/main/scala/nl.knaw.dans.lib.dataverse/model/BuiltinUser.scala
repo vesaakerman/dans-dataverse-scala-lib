@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib.dataverse
+package nl.knaw.dans.lib.dataverse.model
 
-import java.net.URI
-
-case class DataverseInstanceConfig(baseUrl: URI,
-                                   apiToken: String,
-                                   unblockKey: Option[String] = None,
-                                   builtinUserKey: Option[String] = None,
-                                   connectionTimeout: Int = 5000,
-                                   readTimeout: Int = 300000,
-                                   apiVersion: String = "1")
+case class BuiltinUser(firstName: String,
+                       lastName: String,
+                       userName: String,
+                       affiliation: String,
+                       position: String,
+                       email: String)

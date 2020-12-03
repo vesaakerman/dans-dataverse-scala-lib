@@ -32,7 +32,7 @@ public class BaseApp {
     try {
 
       PropertiesConfiguration props = new PropertiesConfiguration("dataverse.properties");
-      server = new DataverseInstance(new DataverseInstanceConfig(new URI(props.getString("baseUrl")), props.getString("apiKey"), new Some<String>(props.getString("unblockKey")), 5000, 300000, "1"));
+      server = new DataverseInstance(new DataverseInstanceConfig(new URI(props.getString("baseUrl")), props.getString("apiKey"), new Some<String>(props.getString("unblockKey")),  new Some<String>(props.getString("builtinUserKey")), 5000, 300000, "1"));
     }
     catch (ConfigurationException e) {
       e.printStackTrace();
