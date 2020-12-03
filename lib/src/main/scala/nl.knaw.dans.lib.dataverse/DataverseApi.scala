@@ -82,9 +82,9 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-a-dataverse]]
    * @return
    */
-  def delete(): Try[DataverseResponse[DataMessage]] = {
+  def delete(): Try[DataverseResponse[Nothing]] = {
     trace(())
-    deletePath[DataMessage](s"dataverses/$dvId")
+    deletePath[Nothing](s"dataverses/$dvId")
   }
 
   /**
@@ -144,9 +144,9 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#report-the-data-file-size-of-a-dataverse]]
    * @return
    */
-  def storageSize(): Try[DataverseResponse[DataMessage]] = {
+  def storageSize(): Try[DataverseResponse[Nothing]] = {
     trace(())
-    get[DataMessage](s"dataverses/$dvId/storagesize")
+    get[Nothing](s"dataverses/$dvId/storagesize")
   }
 
   /**
@@ -167,11 +167,11 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    * @param facets the list of facets
    * @return
    */
-  def setFacets(facets: List[String]): Try[DataverseResponse[DataMessage]] = {
+  def setFacets(facets: List[String]): Try[DataverseResponse[Nothing]] = {
     trace(facets)
     for {
       jsonString <- serializeAsJson(facets, logger.underlying.isDebugEnabled)
-      response <- postJson[DataMessage](s"dataverses/$dvId/facets")(jsonString)
+      response <- postJson[Nothing](s"dataverses/$dvId/facets")(jsonString)
     } yield response
   }
 
@@ -195,9 +195,9 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    * @param role the role to assign
    * @return
    */
-  def setDefaultRole(role: DefaultRole): Try[DataverseResponse[DataMessage]] = {
+  def setDefaultRole(role: DefaultRole): Try[DataverseResponse[Nothing]] = {
     trace(role)
-    put[DataMessage](s"dataverses/$dvId/defaultContributorRole/$role")(null)
+    put[Nothing](s"dataverses/$dvId/defaultContributorRole/$role")(null)
   }
 
   /**
@@ -230,9 +230,9 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    * @param assignmentId the ID of the assignment to delete
    * @return
    */
-  def deleteRoleAssignment(assignmentId: Int): Try[DataverseResponse[DataMessage]] = {
+  def deleteRoleAssignment(assignmentId: Int): Try[DataverseResponse[Nothing]] = {
     trace(assignmentId)
-    deletePath[DataMessage](s"dataverses/$dvId/assignments/$assignmentId")
+    deletePath[Nothing](s"dataverses/$dvId/assignments/$assignmentId")
   }
 
   /**
@@ -249,11 +249,11 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    * @param mdBlockIds list of metadata block IDs
    * @return
    */
-  def setMetadataBlocks(mdBlockIds: List[String]): Try[DataverseResponse[DataMessage]] = {
+  def setMetadataBlocks(mdBlockIds: List[String]): Try[DataverseResponse[Nothing]] = {
     trace(mdBlockIds)
     for {
       jsonString <- serializeAsJson(mdBlockIds, logger.underlying.isDebugEnabled)
-      response <- postJson[DataMessage](s"dataverses/$dvId/metadatablocks")(jsonString)
+      response <- postJson[Nothing](s"dataverses/$dvId/metadatablocks")(jsonString)
     } yield response
   }
 
@@ -271,11 +271,11 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    * @param isRoot whether to make the dataverse a metadata root
    * @return
    */
-  def setMetadataBlocksRoot(isRoot: Boolean): Try[DataverseResponse[DataMessage]] = {
+  def setMetadataBlocksRoot(isRoot: Boolean): Try[DataverseResponse[Nothing]] = {
     trace(isRoot)
     for {
       jsonString <- serializeAsJson(isRoot, logger.underlying.isDebugEnabled)
-      response <- put[DataMessage](s"dataverses/$dvId/metadatablocks/isRoot")(jsonString)
+      response <- put[Nothing](s"dataverses/$dvId/metadatablocks/isRoot")(jsonString)
     } yield response
   }
 

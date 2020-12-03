@@ -17,13 +17,13 @@ package nl.knaw.dans.lib.dataverse
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
-import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, DataverseFile, FieldList, MetadataBlock, MetadataBlocks, PrivateUrlData }
-import nl.knaw.dans.lib.dataverse.model.{ DataMessage, Lock, RoleAssignment, RoleAssignmentReadOnly }
+import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, DataverseFile, FieldList, FileList, MetadataBlock, MetadataBlocks, PrivateUrlData }
+import nl.knaw.dans.lib.dataverse.model.{ Lock, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
-
 import java.net.URI
+
 import scala.util.{ Failure, Try }
 
 /**
@@ -190,7 +190,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-dataset-draft]]
    * @return
    */
-  def deleteDraft(): Try[DataverseResponse[DataMessage]] = {
+  def deleteDraft(): Try[DataverseResponse[Nothing]] = {
     trace(())
     deleteAtTarget("versions/:draft")
   }
@@ -202,7 +202,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @param fieldName the field name of a date field
    * @return
    */
-  def setCitationDateField(fieldName: String): Try[DataverseResponse[DataMessage]] = {
+  def setCitationDateField(fieldName: String): Try[DataverseResponse[Nothing]] = {
     trace(fieldName)
     putToTarget("citationdate", fieldName)
   }
@@ -213,7 +213,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#revert-citation-date-field-type-to-default-for-dataset]]
    * @return
    */
-  def revertCitationDateField(): Try[DataverseResponse[DataMessage]] = {
+  def revertCitationDateField(): Try[DataverseResponse[Nothing]] = {
     deleteAtTarget("citationdate")
   }
 
@@ -243,9 +243,9 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @param assignmentId the ID of the assignment to delete
    * @return
    */
-  def deleteRoleAssignment(assignmentId: Int): Try[DataverseResponse[DataMessage]] = {
+  def deleteRoleAssignment(assignmentId: Int): Try[DataverseResponse[Nothing]] = {
     trace(assignmentId)
-    deleteAtTarget[DataMessage](s"assignments/${ assignmentId }")
+    deleteAtTarget[Nothing](s"assignments/${ assignmentId }")
   }
 
   /**
@@ -270,9 +270,9 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-the-private-url-from-a-dataset]]
    * @return
    */
-  def deletePrivateUrl(): Try[DataverseResponse[DataMessage]] = {
+  def deletePrivateUrl(): Try[DataverseResponse[Nothing]] = {
     trace(())
-    deleteAtTarget[DataMessage]("privateUrl")
+    deleteAtTarget[Nothing]("privateUrl")
   }
 
   /**
@@ -281,9 +281,9 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @param fileMedataData optional metadata for the file
    * @return
    */
-  def addFile(dataFile: File, fileMedataData: DataverseFile): Try[DataverseResponse[DataverseFile]] = {
+  def addFile(dataFile: File, fileMedataData: DataverseFile): Try[DataverseResponse[FileList]] = {
     trace(dataFile, fileMedataData)
-    postFile[DataverseFile]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))
+    postFileToTarget[FileList]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))
   }
 
   /**

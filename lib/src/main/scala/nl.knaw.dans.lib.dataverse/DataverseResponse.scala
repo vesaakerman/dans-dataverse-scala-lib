@@ -63,6 +63,12 @@ case class DataverseResponse[D: Manifest] private[dataverse](httpResponse: HttpR
   def data: Try[D] = {
     json
       .map(_.extract[DataverseMessage[D]])
-      .map(_.data)
+      .map(_.data.get)
+  }
+
+  def message: Try[String] = {
+    json
+      .map(_.extract[DataverseMessage[D]])
+      .map(_.message.get)
   }
 }

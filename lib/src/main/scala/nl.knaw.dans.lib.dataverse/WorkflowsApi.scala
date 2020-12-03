@@ -17,9 +17,7 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
-import nl.knaw.dans.lib.dataverse.model.DataMessage
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import scalaj.http.HttpResponse
 
 import scala.util.Try
 
@@ -33,7 +31,7 @@ class WorkflowsApi private[dataverse](configuration: DataverseInstanceConfig) ex
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 
-  def resume(invocationId: String): Try[DataverseResponse[DataMessage]] = {
+  def resume(invocationId: String): Try[DataverseResponse[Nothing]] = {
     postText(s"workflows/$invocationId")(body = "")
   }
 }

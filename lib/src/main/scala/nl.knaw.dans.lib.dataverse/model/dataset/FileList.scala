@@ -15,9 +15,5 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-case class DataverseFile(label: Option[String] = None,
-                         description: Option[String] = None,
-                         directoryLabel: Option[String] = None,
-                         restrict: Option[Boolean] = None,
-                         categories: List[String] = List.empty[String],
-                         dataFile: Option[DataFile] = None)
+case class FileList(files: List[DataverseFile])
+
