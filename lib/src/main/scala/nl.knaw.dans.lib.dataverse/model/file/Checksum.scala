@@ -13,17 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib.dataverse.model.dataset
+package nl.knaw.dans.lib.dataverse.model.file
 
-case class DataFile(id: Int,
-                    persistentId: String,
-                    pidURL: String,
-                    filename: String,
-                    contentType: String,
-                    filesize: Long,
-                    description: String,
-                    storageIdentifier: String,
-                    rootDataFileId: Int,
-                    checksum: Checksum,
-                    creationDate: String)
-
+case class Checksum(`type`: String, value: String)

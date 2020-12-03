@@ -24,5 +24,6 @@ case class Dataverse(id: Option[Int] = None,
                      affiliation: Option[String] = None,
                      description: Option[String] = None,
                      dataverseType: String,
-                     storageDriverLabel: Option[String] = None)
+                     storageDriverLabel: Option[String] = None,
+                     creationDate: Option[String] = None)
 

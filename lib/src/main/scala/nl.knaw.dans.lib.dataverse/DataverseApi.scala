@@ -82,9 +82,9 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-a-dataverse]]
    * @return
    */
-  def delete(): Try[DataverseResponse[Nothing]] = {
+  def delete(): Try[DataverseResponse[DataMessage]] = {
     trace(())
-    deletePath[Nothing](s"dataverses/$dvId")
+    deletePath[DataMessage](s"dataverses/$dvId")
   }
 
   /**

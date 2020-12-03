@@ -18,12 +18,10 @@ package nl.knaw.dans.lib
 import java.nio.charset.StandardCharsets
 
 import better.files.File
-import nl.knaw.dans.lib.dataverse.model.DataverseMessage
 import nl.knaw.dans.lib.dataverse.model.dataset.MetadataFieldSerializer
 import org.apache.commons.io.FileUtils
-import org.json4s.{ DefaultFormats, Formats, JValue }
-import org.json4s.native.{ JsonMethods, Serialization }
-import scalaj.http.HttpResponse
+import org.json4s.native.Serialization
+import org.json4s.{ DefaultFormats, Formats }
 
 import scala.util.Try
 

@@ -15,6 +15,8 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
+import nl.knaw.dans.lib.dataverse.model.file.FileInfo
+
 case class DatasetVersion(id: Option[Int] = None,
                           datasetId: Option[Int] = None,
                           datasetPersistentId: Option[String] = None,
@@ -33,4 +35,4 @@ case class DatasetVersion(id: Option[Int] = None,
                           authority: Option[String] = None,
                           identifier: Option[String] = None,
                           metadataBlocks: MetadataBlocks = Map.empty,
-                          files: List[DataverseFile] = List.empty)
+                          files: List[FileInfo] = List.empty)

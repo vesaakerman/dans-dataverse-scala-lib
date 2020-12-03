@@ -13,11 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib.dataverse.model.dataset
+package nl.knaw.dans.lib.dataverse.model.file
 
-case class DataverseFile(label: Option[String] = None,
-                         description: Option[String] = None,
-                         directoryLabel: Option[String] = None,
-                         restrict: Option[Boolean] = None,
-                         categories: List[String] = List.empty[String],
-                         dataFile: Option[DataFile] = None)
+case class DataFile(id: Int,
+                    persistentId: String,
+                    pidURL: String,
+                    filename: String,
+                    contentType: String,
+                    filesize: Long,
+                    description: String,
+                    storageIdentifier: String,
+                    rootDataFileId: Int,
+                    checksum: Checksum,
+                    creationDate: String)
+

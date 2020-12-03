@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.lib.dataverse.model.dataset
+package nl.knaw.dans.lib.dataverse.model.file
 
-case class Checksum(`type`: String, value: String)
+case class FileInfo(label: Option[String] = None,
+                    description: Option[String] = None,
+                    directoryLabel: Option[String] = None,
+                    restrict: Option[Boolean] = None,
+                    categories: List[String] = List.empty[String],
+                    dataFile: Option[DataFile] = None)

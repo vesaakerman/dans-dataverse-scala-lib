@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.examples
 
-import nl.knaw.dans.lib.dataverse.model.dataset.DataverseFile
+import nl.knaw.dans.lib.dataverse.model.file.FileInfo
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.{ DefaultFormats, Formats }
 
@@ -26,7 +26,7 @@ object UpdateFileMetadata extends App with DebugEnhancedLogging with BaseApp {
   private val directoryLabel = args(2)
   private val restrict = args(3).toBoolean
 
-  val fileMetadata = DataverseFile(description = Some(description),
+  val fileMetadata = FileInfo(description = Some(description),
     directoryLabel = Some(directoryLabel),
     restrict = Some(restrict))
 

@@ -17,12 +17,14 @@ package nl.knaw.dans.lib.dataverse
 
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
-import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, DataverseFile, FieldList, FileList, MetadataBlock, MetadataBlocks, PrivateUrlData }
+import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, FieldList, FileList, MetadataBlock, MetadataBlocks, PrivateUrlData }
 import nl.knaw.dans.lib.dataverse.model.{ DataMessage, DatasetPublicationResult, Lock, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
 import java.net.URI
+
+import nl.knaw.dans.lib.dataverse.model.file.FileInfo
 
 import scala.util.{ Failure, Try }
 
@@ -100,9 +102,9 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @param version the version of the dataset
    * @return
    */
-  def listFiles(version: Version = Version.LATEST): Try[DataverseResponse[List[DataverseFile]]] = {
+  def listFiles(version: Version = Version.LATEST): Try[DataverseResponse[List[FileInfo]]] = {
     trace(version)
-    getVersionedFromTarget[List[DataverseFile]]("files", version)
+    getVersionedFromTarget[List[FileInfo]]("files", version)
   }
 
   /**
@@ -281,7 +283,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @param fileMedataData optional metadata for the file
    * @return
    */
-  def addFile(dataFile: File, fileMedataData: DataverseFile): Try[DataverseResponse[FileList]] = {
+  def addFile(dataFile: File, fileMedataData: FileInfo): Try[DataverseResponse[FileList]] = {
     trace(dataFile, fileMedataData)
     postFileToTarget[FileList]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))
   }

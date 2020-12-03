@@ -16,7 +16,7 @@
 package nl.knaw.dans.examples
 
 import better.files.File
-import nl.knaw.dans.lib.dataverse.model.dataset.DataverseFile
+import nl.knaw.dans.lib.dataverse.model.file.FileInfo
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.{ DefaultFormats, Formats }
 import org.json4s.native.Serialization
@@ -26,7 +26,7 @@ object AddFile extends App with DebugEnhancedLogging with BaseApp {
   private val persistentId = args(0)
   private val filePath = File(args(1))
   private val directoryLabel = args(2)
-  private val fileMetadata = DataverseFile(
+  private val fileMetadata = FileInfo(
     directoryLabel = Option(directoryLabel),
     label = Option(filePath.name))
 

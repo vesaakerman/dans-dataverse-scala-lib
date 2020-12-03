@@ -40,6 +40,13 @@ package object dataset {
   val EXPORT_FORMAT_OAI_DATACITE = "oai_datacite"
   val EXPORT_FORMAT_DATAVERSE_JSON = "dataverse_json"
 
+  /**
+   * Utility function that converts a list of metadata fields
+   *
+   *
+   * @param subFields
+   * @return
+   */
   def toFieldMap(subFields: MetadataField*): CompoundFieldValue = {
     subFields.map(f => (f.typeName, f)).toMap
   }
