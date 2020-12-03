@@ -16,12 +16,13 @@
 package nl.knaw.dans.examples
 
 import nl.knaw.dans.lib.dataverse.Version
+import nl.knaw.dans.lib.dataverse.model.dataset.PrimitiveSingleValueField
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
+import org.json4s.{ DefaultFormats, Formats }
 
 object GetMetadataBlock extends App with DebugEnhancedLogging with BaseApp {
-  private implicit val jsonFormats: DefaultFormats = DefaultFormats
+  private implicit val jsonFormats: Formats = DefaultFormats
   private val persistentId = args(0)
 
   val result = for {
@@ -29,6 +30,13 @@ object GetMetadataBlock extends App with DebugEnhancedLogging with BaseApp {
     _ = logger.info(s"Raw response: ${ response.string }")
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
+    mdb <- response.data
+    _ = logger.info(s"Title = ${
+      mdb.fields.find(_.typeName == "title").map {
+        case psvf: PrimitiveSingleValueField => psvf.value
+        case _ => "UNEXPECTED FIELD TYPE"
+      }.getOrElse("NO TITLE?")
+    }")
   } yield ()
   logger.info(s"result = $result")
 }

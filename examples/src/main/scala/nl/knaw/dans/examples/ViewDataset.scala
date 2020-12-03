@@ -15,13 +15,12 @@
  */
 package nl.knaw.dans.examples
 
-import nl.knaw.dans.lib.dataverse.Version
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.DefaultFormats
+import org.json4s.{ DefaultFormats, Formats }
 import org.json4s.native.Serialization
 
 object ViewDataset extends App with DebugEnhancedLogging with BaseApp {
-  private implicit val jsonFormats: DefaultFormats = DefaultFormats
+  private implicit val jsonFormats: Formats = DefaultFormats
   private val persistentId = args(0)
 
   val result = for {
@@ -29,6 +28,8 @@ object ViewDataset extends App with DebugEnhancedLogging with BaseApp {
     _ = logger.info(s"Raw response: ${ response.string }")
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
+    dsv <- response.data
+    _ = logger.info(s"Version = ${dsv.versionNumber.getOrElse("?")}.${dsv.versionMinorNumber.getOrElse("?")}")
   } yield ()
   logger.info(s"result = $result")
 }

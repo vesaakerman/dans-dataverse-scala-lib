@@ -16,32 +16,14 @@
 package nl.knaw.dans.lib.dataverse.model
 
 /**
- * Response message sent by Dataverse. This can be extracted into case class objects with json4s.
+ * A JSON response message sent by Dataverse. The message may contain payload object (for example dataset information when this was requested).
+ * This can be retrieved from the `data` field. It may also contain an informational message. That can be retrieved from the `message` field.
+ * Sometimes the informational message is packaged in the `data` field. In these cases the payload type will be [[DataMessage]].
  *
- * @param status OK or ERROR
- * @param data   payload of the response; in case of an ERROR: the error message
+ * @param status  current status, usually OK or ERROR
+ * @param data    payload of the response; in case of an ERROR: the error message
+ * @param message a message from Dataverse, maybe informational or a warning
  * @tparam D the expected type of payload data
  * */
 case class DataverseMessage[D](status: String, data: Option[D], message: Option[String])
 
-///**
-// * For informational OK messages Dataverse sometimes (?) uses a separate object with one key - "message" - in the data field.
-// *
-// * @param message the informational message
-// */
-//case class DataMessage(message: String)
-//
-//object DataverseMessage {
-//
-//  /**
-//   * Constructs a [[DataverseMessage]] that contains status message from Dataverse. The `message` field content is put in the `data` field of the `DataverseMessage` object.
-//   * Typically this message is an error. OK messages seem to be put in a wrapper object that is then put into the "data" field. See [[DataMessage]].
-//   *
-//   * @param status  the status, OK or ERROR
-//   * @param message the error message
-//   * @return the DataverseMessage object
-//   */
-//  def apply(status: String, message: String): DataverseMessage[String] = {
-//    DataverseMessage(status, data = message)
-//  }
-//}

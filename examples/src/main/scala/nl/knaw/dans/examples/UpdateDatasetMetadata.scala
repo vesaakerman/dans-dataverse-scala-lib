@@ -15,14 +15,15 @@
  */
 package nl.knaw.dans.examples
 
-import nl.knaw.dans.lib.dataverse.model.dataset.{ CompoundField, ControlledMultipleValueField, MetadataBlock, MetadataBlocks, PrimitiveMultipleValueField, PrimitiveSingleValueField, toFieldMap }
+import nl.knaw.dans.lib.dataverse.model.dataset.{ CompoundField, ControlledMultipleValueField, MetadataBlock, MetadataBlocks, PrimitiveSingleValueField, toFieldMap }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
+import org.json4s.{ DefaultFormats, Formats }
 
 object UpdateDatasetMetadata extends App with DebugEnhancedLogging with BaseApp {
-  private implicit val jsonFormats: DefaultFormats = DefaultFormats
+  private implicit val jsonFormats: Formats = DefaultFormats
   private val persistentId = args(0)
+  private val title = args(1)
 
   /*
    * Note: this will overwrite everything; fields not specified here are deleted.
@@ -31,7 +32,7 @@ object UpdateDatasetMetadata extends App with DebugEnhancedLogging with BaseApp 
     "citation" -> MetadataBlock(
       displayName = "Citation Metadata",
       fields = List(
-        PrimitiveSingleValueField("title", "NEW TITLE"),
+        PrimitiveSingleValueField("title", s"$title"),
         CompoundField("author", List(
           toFieldMap(PrimitiveSingleValueField("authorName", "NEW AUTHOR"))
         )),
@@ -41,10 +42,10 @@ object UpdateDatasetMetadata extends App with DebugEnhancedLogging with BaseApp 
           )
         )),
         CompoundField("datasetContact", List(
-            toFieldMap(
-              PrimitiveSingleValueField("datasetContactName", "NEW CONTACT NAME"),
-              PrimitiveSingleValueField("datasetContactEmail", "NEW_CONTACT@example.com")
-            )
+          toFieldMap(
+            PrimitiveSingleValueField("datasetContactName", "NEW CONTACT NAME"),
+            PrimitiveSingleValueField("datasetContactEmail", "NEW_CONTACT@example.com")
+          )
         )),
         ControlledMultipleValueField("subject", List("Chemistry"))
       )
@@ -56,6 +57,8 @@ object UpdateDatasetMetadata extends App with DebugEnhancedLogging with BaseApp 
     _ = logger.info(s"Raw response message: ${ response.string }")
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
+    dsv <- response.data
+    _ = logger.info(s"Last update time: ${ dsv.lastUpdateTime.get }")
   } yield ()
   logger.info(s"result = $result")
 }

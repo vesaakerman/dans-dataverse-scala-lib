@@ -16,11 +16,11 @@
 package nl.knaw.dans.examples
 
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
+import org.json4s.{ DefaultFormats, Formats }
 
 object ListFacets extends App with DebugEnhancedLogging with BaseApp {
-  private implicit val jsonFormats: DefaultFormats = DefaultFormats
+  private implicit val jsonFormats: Formats = DefaultFormats
   val result = for {
     response <- server.dataverse("root").listFacets()
     _ = logger.info(s"Raw response message: ${ response.string }")

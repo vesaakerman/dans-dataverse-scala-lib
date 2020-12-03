@@ -16,10 +16,10 @@
 package nl.knaw.dans.examples
 
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.DefaultFormats
+import org.json4s.{ DefaultFormats, Formats }
 
 object GetLocks extends App with DebugEnhancedLogging with BaseApp {
-  private implicit val jsonFormats: DefaultFormats = DefaultFormats
+  private implicit val jsonFormats: Formats = DefaultFormats
   private val persistentId = args(0)
 
   /*

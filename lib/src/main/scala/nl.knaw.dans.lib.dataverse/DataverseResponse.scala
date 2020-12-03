@@ -45,7 +45,7 @@ case class DataverseResponse[D: Manifest] private[dataverse](httpResponse: HttpR
    * The body of the response, decoded as UTF-8 string.
    */
   def string: Try[String] = Try {
-    new String(httpResponse.body, StandardCharsets.UTF_8)
+    new String(httpResponse.body, StandardCharsets.UTF_8) // TODO: attempt to get correct char encoding from Content-Type header?
   }
 
   /**

@@ -18,7 +18,7 @@ package nl.knaw.dans.lib.dataverse
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, DataverseFile, FieldList, FileList, MetadataBlock, MetadataBlocks, PrivateUrlData }
-import nl.knaw.dans.lib.dataverse.model.{ Lock, RoleAssignment, RoleAssignmentReadOnly }
+import nl.knaw.dans.lib.dataverse.model.{ DataMessage, DatasetPublicationResult, Lock, RoleAssignment, RoleAssignmentReadOnly }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
@@ -110,9 +110,9 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @param version the version of the dataset
    * @return a map of metadata block identifier to metadata block
    */
-  def listMetadataBlocks(version: Version = Version.LATEST): Try[DataverseResponse[Map[String, MetadataBlock]]] = {
+  def listMetadataBlocks(version: Version = Version.LATEST): Try[DataverseResponse[MetadataBlocks]] = {
     trace((version))
-    getVersionedFromTarget[Map[String, MetadataBlock]]("metadata", version)
+    getVersionedFromTarget[MetadataBlocks]("metadata", version)
   }
 
   /**
@@ -176,9 +176,9 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @param updateType major or minor version update
    * @return
    */
-  def publish(updateType: UpdateType): Try[DataverseResponse[DatasetVersion]] = {
+  def publish(updateType: UpdateType): Try[DataverseResponse[DatasetPublicationResult]] = {
     trace(updateType)
-    postJsonToTarget[DatasetVersion]("actions/:publish", "", Map("type" -> updateType.toString))
+    postJsonToTarget[DatasetPublicationResult]("actions/:publish", "", Map("type" -> updateType.toString))
   }
 
   /**
@@ -190,7 +190,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-dataset-draft]]
    * @return
    */
-  def deleteDraft(): Try[DataverseResponse[Nothing]] = {
+  def deleteDraft(): Try[DataverseResponse[DataMessage]] = {
     trace(())
     deleteAtTarget("versions/:draft")
   }
