@@ -17,12 +17,10 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
-import better.files.File
 import nl.knaw.dans.lib.dataverse.model.file.FileInfo
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.{ DefaultFormats, Formats }
 import org.json4s.native.Serialization
-import scalaj.http.HttpResponse
+import org.json4s.{ DefaultFormats, Formats }
 
 import scala.util.Try
 
@@ -53,5 +51,4 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
     trace(fm)
     postFileToTarget[Nothing]("metadata", optFile = None, optMetadata = Option(Serialization.write(fm)))
   }
-
 }

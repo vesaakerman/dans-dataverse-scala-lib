@@ -18,6 +18,7 @@ package nl.knaw.dans.lib.dataverse
 import java.io.FileInputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets
+
 import better.files.File
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scalaj.http.{ Http, MultiPart }
@@ -71,7 +72,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
                       else Option.empty
 
     val partsBuffer = mutable.ListBuffer[MultiPart]()
-    optFile.foreach(f => partsBuffer.append(MultiPart(name = "file", filename = f.name, mime = MEDIA_TYPE_OCTET_STREAM, new FileInputStream(f.pathAsString), f.size, lenWritten => {}) ))
+    optFile.foreach(f => partsBuffer.append(MultiPart(name = "file", filename = f.name, mime = MEDIA_TYPE_OCTET_STREAM, new FileInputStream(f.pathAsString), f.size, lenWritten => {})))
     optJsonMetadata.foreach(md => partsBuffer.append(MultiPart(data = md.getBytes(StandardCharsets.UTF_8), name = "jsonData", filename = "jsonData", mime = MEDIA_TYPE_JSON)))
 
     val request = Http(uri.toASCIIString).postMulti(partsBuffer.toList: _*)
@@ -153,7 +154,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       .map { case (u, p) => request.auth(u, p) }
       .getOrElse(request)
     val request3 = unblockKey
-      .map {  k => request2.param("unblock-key", k)}
+      .map { k => request2.param("unblock-key", k) }
       .getOrElse(request2)
     val response = request3.asBytes
     if (response.code >= 200 && response.code < 300) DataverseResponse(response)

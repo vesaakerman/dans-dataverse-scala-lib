@@ -15,16 +15,16 @@
  */
 package nl.knaw.dans.lib.dataverse
 
+import java.net.URI
+
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, FieldList, FileList, MetadataBlock, MetadataBlocks, PrivateUrlData }
-import nl.knaw.dans.lib.dataverse.model.{ DataMessage, DatasetPublicationResult, Lock, RoleAssignment, RoleAssignmentReadOnly }
+import nl.knaw.dans.lib.dataverse.model.file.FileInfo
+import nl.knaw.dans.lib.dataverse.model._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
-import java.net.URI
-
-import nl.knaw.dans.lib.dataverse.model.file.FileInfo
 
 import scala.util.{ Failure, Try }
 

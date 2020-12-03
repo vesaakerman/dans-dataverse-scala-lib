@@ -20,7 +20,7 @@ package nl.knaw.dans.lib.dataverse.model.dataset
  * different type for each type class.
  *
  * @param typeClass the type class of the field (primitive, controlledVocabulary, compound)
- * @param typeName the field ID
- * @param multiple whether this field allows multiple values
+ * @param typeName  the field ID
+ * @param multiple  whether this field allows multiple values
  */
 abstract class MetadataField(val typeClass: String, val typeName: String, val multiple: Boolean)

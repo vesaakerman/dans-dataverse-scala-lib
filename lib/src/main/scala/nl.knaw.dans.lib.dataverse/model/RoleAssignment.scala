@@ -19,7 +19,7 @@ package nl.knaw.dans.lib.dataverse.model
  * Note: user IDs must be prefixed with an `@` sign (e.g., `@myuser`)
  *
  * @param assignee user or group to assign the role to
- * @param role the role to assign
+ * @param role     the role to assign
  */
 case class RoleAssignment(assignee: String, role: String)
 

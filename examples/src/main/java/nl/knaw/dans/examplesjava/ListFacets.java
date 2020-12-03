@@ -17,16 +17,13 @@ package nl.knaw.dans.examplesjava;
 
 import nl.knaw.dans.lib.dataverse.DataverseException;
 import nl.knaw.dans.lib.dataverse.DataverseResponse;
-import nl.knaw.dans.lib.dataverse.model.Dataverse;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.PartialFunction;
 import scala.collection.immutable.List;
-import scala.util.Failure;
-import scala.util.Try;
 
 public class ListFacets extends BaseApp {
+
   private static final Logger logger = LoggerFactory.getLogger(ListFacets.class);
 
   public static void main(String[] args) {
@@ -39,7 +36,8 @@ public class ListFacets extends BaseApp {
       String[] facets = new String[response.data().get().size()];
       response.data().get().copyToArray(facets);
       logger.info("The following {} are active: {}", facets.length, StringUtils.join(facets, ", "));
-    } catch (DataverseException e) {
+    }
+    catch (DataverseException e) {
       logger.error("List facets failed.", e);
     }
   }

@@ -30,6 +30,7 @@ class AdminApi private[dataverse](configuration: DataverseInstanceConfig) extend
   protected val unblockKey: Option[String] = configuration.unblockKey
   protected val apiPrefix: String = ""
   protected val apiVersion: Option[String] = Option.empty // No version allowed here
+
   /**
    * Returns the account data for a single user.
    *
@@ -41,5 +42,4 @@ class AdminApi private[dataverse](configuration: DataverseInstanceConfig) extend
     trace(id)
     get[model.User](s"api/admin/authenticatedUsers/$id")
   }
-
 }

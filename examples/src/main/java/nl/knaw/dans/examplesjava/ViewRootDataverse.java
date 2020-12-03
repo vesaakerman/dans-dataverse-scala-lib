@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ViewRootDataverse extends BaseApp {
+
   private static final Logger logger = LoggerFactory.getLogger(ViewRootDataverse.class);
 
   public static void main(String[] args) {

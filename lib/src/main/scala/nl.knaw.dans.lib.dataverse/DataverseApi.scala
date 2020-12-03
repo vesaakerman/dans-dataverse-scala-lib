@@ -22,7 +22,6 @@ import nl.knaw.dans.lib.dataverse.model.DefaultRole.DefaultRole
 import nl.knaw.dans.lib.dataverse.model._
 import nl.knaw.dans.lib.dataverse.model.dataset.DatasetCreationResult
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import scalaj.http.HttpResponse
 
 import scala.util.Try
 
@@ -333,7 +332,6 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    * Publishes a dataverse.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#publish-a-dataverse]]
-   *
    * @return
    */
   def publish(): Try[DataverseResponse[model.Dataverse]] = {

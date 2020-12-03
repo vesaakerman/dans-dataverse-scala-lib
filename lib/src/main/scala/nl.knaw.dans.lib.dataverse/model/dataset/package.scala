@@ -43,7 +43,6 @@ package object dataset {
   /**
    * Utility function that converts a list of metadata fields
    *
-   *
    * @param subFields
    * @return
    */

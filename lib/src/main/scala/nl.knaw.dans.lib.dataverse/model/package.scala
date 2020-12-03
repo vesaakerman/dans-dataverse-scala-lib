@@ -15,15 +15,12 @@
  */
 package nl.knaw.dans.lib.dataverse
 
-import nl.knaw.dans.lib.dataverse.model.dataset.MetadataBlock
-
 /**
  * Classes that model the JSON objects that Dataverse produces and consumes.
  *
  * TODO: add few simple examples.
  */
 package object model {
-
 
   /**
    * Enumeration of the default roles that can be assigned.

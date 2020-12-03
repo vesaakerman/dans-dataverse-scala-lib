@@ -15,4 +15,4 @@
  */
 package nl.knaw.dans.lib.dataverse.model
 
-case class DataMessage (message: String)
+case class DataMessage(message: String)

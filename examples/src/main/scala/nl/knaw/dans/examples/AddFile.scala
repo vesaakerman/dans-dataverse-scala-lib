@@ -36,7 +36,7 @@ object AddFile extends App with DebugEnhancedLogging with BaseApp {
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
     fileList <- response.data
-    _ = logger.info(s"File has ${fileList.files.head.dataFile.get.checksum.`type`} checksum ${fileList.files.head.dataFile.get.checksum.value}")
+    _ = logger.info(s"File has ${ fileList.files.head.dataFile.get.checksum.`type` } checksum ${ fileList.files.head.dataFile.get.checksum.value }")
   } yield ()
   logger.info(s"result = $result")
 }
