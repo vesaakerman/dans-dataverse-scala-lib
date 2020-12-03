@@ -20,7 +20,7 @@ import org.json4s.{ DefaultFormats, Formats }
 
 import scala.util.Try
 
-trait HttpIdentifiedObjectSupport extends HttpSupport {
+trait TargetedHttpSuport extends HttpSupport {
   private implicit val jsonFormats: Formats = DefaultFormats
 
   protected val endPointBase: String

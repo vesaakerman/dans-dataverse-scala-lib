@@ -19,7 +19,6 @@ import nl.knaw.dans.lib.dataverse.DataverseInstance;
 import nl.knaw.dans.lib.dataverse.DataverseInstanceConfig;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import scala.Option;
 import scala.Some;
 
 import java.net.URI;
@@ -29,8 +28,10 @@ public class BaseApp {
 
   protected static DataverseInstance server;
 
+
   static {
     try {
+
       PropertiesConfiguration props = new PropertiesConfiguration("dataverse.properties");
       server = new DataverseInstance(new DataverseInstanceConfig(
           new URI(props.getString("baseUrl")),
