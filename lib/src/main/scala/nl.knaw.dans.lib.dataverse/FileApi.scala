@@ -59,27 +59,29 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#uningest-a-file]]
    * @return
    */
-  def uningest(): Try[DataverseResponse[Any]] = {
-    ???
-    // TODO: uningest
+  def uningest(): Try[DataverseResponse[DataMessage]] = {
+    trace(())
+    // Not really JSON we are posting, but this seem to work anyway.
+    postJsonToTarget("uningest", "")
   }
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#reingest-a-file]]
    * @return
    */
-  def reingest(): Try[DataverseResponse[Any]] = {
-    ???
-    // TODO: reingest
+  def reingest(): Try[DataverseResponse[DataMessage]] = {
+    trace(())
+    postJsonToTarget("reingest", "")
   }
 
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#redetect-file-type]]
+   * @param dryRun do not save the change
    * @return
    */
-  def redetect(): Try[DataverseResponse[Any]] = {
-    ???
-    // TODO: redetect
+  def redetect(dryRun: Boolean = false): Try[DataverseResponse[Any]] = {
+    trace(dryRun)
+    postJsonToTarget("redetect", "", Map("dryRun" -> dryRun.toString))
   }
 
   /**
