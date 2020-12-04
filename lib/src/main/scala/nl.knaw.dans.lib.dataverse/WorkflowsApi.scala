@@ -33,6 +33,6 @@ class WorkflowsApi private[dataverse](configuration: DataverseInstanceConfig) ex
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
 
   def resume(invocationId: String): Try[DataverseResponse[Nothing]] = {
-    postText(s"workflows/$invocationId")(body = "")
+    postText(s"workflows/$invocationId", body = "")
   }
 }

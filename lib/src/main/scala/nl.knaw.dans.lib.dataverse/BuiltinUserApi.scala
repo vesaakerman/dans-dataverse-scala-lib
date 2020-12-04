@@ -49,7 +49,7 @@ class BuiltinUserApi private[dataverse](configuration: DataverseInstanceConfig) 
    * @return
    */
   def create(user: model.BuiltinUser, password: String): Try[DataverseResponse[Any]] = {
-    postJson[Any]("builtin-users")(Serialization.write(user), Map("password" -> password, "key" -> builtinUserKey.getOrElse("")))
+    postJson[Any]("builtin-users", Serialization.write(user), Map.empty, Map("password" -> password, "key" -> builtinUserKey.getOrElse("")))
   }
 
 

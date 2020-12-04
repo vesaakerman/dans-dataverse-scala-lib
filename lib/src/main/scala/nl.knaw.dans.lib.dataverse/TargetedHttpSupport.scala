@@ -40,8 +40,11 @@ private[dataverse] trait TargetedHttpSupport extends HttpSupport {
    */
   protected def getVersionedFromTarget[D: Manifest](endPoint: String, version: Version = Version.LATEST): Try[DataverseResponse[D]] = {
     trace(endPoint, version)
-    if (isPersistentId) super.get[D](s"${ targetBase }/:persistentId/versions/${ version }/${ endPoint }",  Map("persistentId" -> id))
-    else super.get[D](s"${ targetBase }/$id/versions/${ version }/${ endPoint }")
+    if (isPersistentId) super.get[D](
+      subPath = s"${ targetBase }/:persistentId/versions/${ version }/${ endPoint }",
+      params = Map("persistentId" -> id))
+    else super.get[D](
+      subPath = s"${ targetBase }/$id/versions/${ version }/${ endPoint }")
   }
 
   /**
@@ -53,42 +56,53 @@ private[dataverse] trait TargetedHttpSupport extends HttpSupport {
    */
   protected def getUnversionedFromTarget[D: Manifest](endPoint: String): Try[DataverseResponse[D]] = {
     trace(endPoint)
-    if (isPersistentId) super.get[D](s"${ targetBase }/:persistentId/${ endPoint }", Map("persistentId" -> id))
-    else super.get[D](s"${ targetBase }/$id/${ endPoint }")
+    if (isPersistentId) super.get[D](
+      subPath = s"${ targetBase }/:persistentId/${ endPoint }",
+      params = Map("persistentId" -> id))
+    else super.get[D](
+      subPath = s"${ targetBase }/$id/${ endPoint }")
   }
 
   protected def postJsonToTarget[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    if (isPersistentId) super.postJson[D](s"${ targetBase }/:persistentId/${ endPoint }")(body, Map("persistentId" -> id) ++ queryParams)
-    else super.postJson[D](s"${ targetBase }/$id/${ endPoint }")(body, queryParams)
+    if (isPersistentId) super.postJson[D](
+      subPath = s"${ targetBase }/:persistentId/${ endPoint }",
+      body,
+      params = Map("persistentId" -> id) ++ queryParams)
+    else super.postJson[D](
+      subPath = s"${ targetBase }/$id/${ endPoint }",
+      body,
+      params = queryParams)
   }
 
   protected def postFileToTarget[D: Manifest](endPoint: String, optFile: Option[File], optMetadata: Option[String], queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, queryParams)
-    if (isPersistentId) super.postFile[D](s"${ targetBase }/:persistentId/${ endPoint }?persistentId=$id${
-      if (queryString.nonEmpty) "&" + queryString
-      else ""
-    }", optFile, optMetadata)
-    else super.postFile[D](s"${ targetBase }/$id/${ endPoint }$queryString", optFile, optMetadata)
+    if (isPersistentId) super.postFile[D](
+      subPath = s"${ targetBase }/:persistentId/${ endPoint }",
+      optFile,
+      optMetadata,
+      params = Map("persistentId" -> id) ++ queryParams)
+    else super.postFile[D](
+      subPath = s"${ targetBase }/$id/${ endPoint }",
+      optFile,
+      optMetadata,
+      params = queryParams)
   }
 
   protected def putToTarget[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, body, queryParams)
-    if (isPersistentId) super.put[D](s"${ targetBase }/:persistentId/${ endPoint }?persistentId=$id${
-      if (queryString.nonEmpty) "&" + queryString
-      else ""
-    }")(body)
-    else super.put[D](s"${ targetBase }/$id/${ endPoint }$queryString")(body)
+    if (isPersistentId) super.put[D](
+      subPath = s"${ targetBase }/:persistentId/${ endPoint }",
+      body,
+      params = Map("persistentId" -> id) ++ queryParams)
+    else super.put[D](
+      subPath = s"${ targetBase }/$id/${ endPoint }",
+      body,
+      params = queryParams)
   }
 
-  protected def deleteAtTarget[D: Manifest](endPoint: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, queryParams)
-    if (isPersistentId) super.deletePath[D](s"${ targetBase }/:persistentId/${ endPoint }?persistentId=$id${
-      if (queryString.nonEmpty) "&" + queryString
-      else ""
-    }")
-    else super.deletePath[D](s"${ targetBase }/$id/${ endPoint }$queryString")
+  protected def deleteAtTarget[D: Manifest](endPoint: String): Try[DataverseResponse[D]] = {
+    if (isPersistentId) super.deletePath[D](
+      subPath = s"${ targetBase }/:persistentId/${ endPoint }",
+      params = Map("persistentId" -> id))
+    else super.put[D](
+      subPath = s"${ targetBase }/$id/${ endPoint }")
   }
 }

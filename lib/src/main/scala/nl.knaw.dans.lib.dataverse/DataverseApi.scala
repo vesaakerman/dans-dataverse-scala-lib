@@ -17,7 +17,6 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
-import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DefaultRole.DefaultRole
 import nl.knaw.dans.lib.dataverse.model._
 import nl.knaw.dans.lib.dataverse.model.dataset.DatasetCreationResult
@@ -48,7 +47,7 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
     trace(dd)
     for {
       jsonString <- serializeAsJson(dd, logger.underlying.isDebugEnabled)
-      response <- postJson[model.Dataverse](s"dataverses/$dvId")(jsonString)
+      response <- postJson[model.Dataverse](s"dataverses/$dvId", jsonString)
     } yield response
   }
 
@@ -60,7 +59,7 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    */
   def view(): Try[DataverseResponse[model.Dataverse]] = {
     trace(())
-    get(s"dataverses/$dvId")
+    get(s"dataverses/$dvId", Map.empty)
   }
 
   /**
@@ -107,7 +106,7 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
     trace(role)
     for {
       jsonString <- serializeAsJson(role, logger.underlying.isDebugEnabled)
-      response <- postJson[Role](s"dataverses/$dvId/roles")(jsonString)
+      response <- postJson[Role](s"dataverses/$dvId/roles", jsonString)
     } yield response
   }
 
@@ -144,7 +143,7 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
     trace(facets)
     for {
       jsonString <- serializeAsJson(facets, logger.underlying.isDebugEnabled)
-      response <- postJson[Nothing](s"dataverses/$dvId/facets")(jsonString)
+      response <- postJson[Nothing](s"dataverses/$dvId/facets", jsonString)
     } yield response
   }
 
@@ -182,7 +181,7 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
     trace(roleAssignment)
     for {
       jsonString <- serializeAsJson(roleAssignment, logger.underlying.isDebugEnabled)
-      response <- postJson[RoleAssignmentReadOnly](s"dataverses/$dvId/assignments")(jsonString)
+      response <- postJson[RoleAssignmentReadOnly](s"dataverses/$dvId/assignments", jsonString)
     } yield response
   }
 
@@ -216,7 +215,7 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
     trace(mdBlockIds)
     for {
       jsonString <- serializeAsJson(mdBlockIds, logger.underlying.isDebugEnabled)
-      response <- postJson[Nothing](s"dataverses/$dvId/metadatablocks")(jsonString)
+      response <- postJson[Nothing](s"dataverses/$dvId/metadatablocks", jsonString)
     } yield response
   }
 
@@ -238,7 +237,7 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
     trace(isRoot)
     for {
       jsonString <- serializeAsJson(isRoot, logger.underlying.isDebugEnabled)
-      response <- put[Nothing](s"dataverses/$dvId/metadatablocks/isRoot")(jsonString)
+      response <- put[Nothing](s"dataverses/$dvId/metadatablocks/isRoot", jsonString)
     } yield response
   }
 
@@ -251,7 +250,7 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
     trace(dataset)
     for {
       jsonString <- serializeAsJson(dataset, logger.underlying.isDebugEnabled)
-      response <- postJson[DatasetCreationResult](s"dataverses/$dvId/datasets")(jsonString)
+      response <- postJson[DatasetCreationResult](s"dataverses/$dvId/datasets", jsonString)
     } yield response
   }
 
@@ -268,7 +267,11 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
       pid <- getPid(dataset)
       _ = debug(s"Found pid = $pid")
       jsonString <- serializeAsJson(dataset, logger.underlying.isDebugEnabled)
-      response <- postJson[DatasetCreationResult](s"dataverses/$dvId/datasets/:import?pid=$pid&release=$autoPublish")(jsonString)
+      response <- postJson[DatasetCreationResult](
+        subPath = s"dataverses/$dvId/datasets/:import",
+        body = jsonString,
+        params = Map("pid" -> pid,
+          "release" -> autoPublish.toString))
     } yield response
   }
 
@@ -290,6 +293,6 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
    */
   def publish(): Try[DataverseResponse[model.Dataverse]] = {
     trace(())
-    postJson[model.Dataverse](s"dataverses/$dvId/actions/:publish")()
+    postJson[model.Dataverse](s"dataverses/$dvId/actions/:publish")
   }
 }

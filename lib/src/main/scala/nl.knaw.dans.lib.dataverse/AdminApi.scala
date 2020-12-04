@@ -53,7 +53,7 @@ class AdminApi private[dataverse](configuration: DataverseInstanceConfig) extend
    */
   def putDatabaseSetting(settingName: String, value: String): Try[DataverseResponse[DatabaseSetting]] = {
     trace(settingName, value)
-    put[DatabaseSetting](s"api/admin/settings/${ settingName }")(value)
+    put[DatabaseSetting](s"api/admin/settings/${ settingName }", value)
   }
 
   /**
