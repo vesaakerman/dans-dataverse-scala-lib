@@ -1,3 +1,4 @@
-baseUrl=https://mydataverse.com/
+baseUrl=https://yourserver.com/
 unblockKey=s3kretKey
-apiKey=my-api-key-1234
+builtinUserKey=s3cr3t
+apiKey=your-api-key
