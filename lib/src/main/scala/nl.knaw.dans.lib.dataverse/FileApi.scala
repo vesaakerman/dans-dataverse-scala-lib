@@ -20,7 +20,7 @@ import java.net.URI
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DataMessage
 import nl.knaw.dans.lib.dataverse.model.dataset.FileList
-import nl.knaw.dans.lib.dataverse.model.file.{ FileInfo, Provenance }
+import nl.knaw.dans.lib.dataverse.model.file.{ DetectionResult, FileInfo, Provenance }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
@@ -28,7 +28,7 @@ import org.json4s.{ DefaultFormats, Formats }
 import scala.util.Try
 import scala.xml.Elem
 
-class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, configuration: DataverseInstanceConfig) extends TargetedHttpSuport with DebugEnhancedLogging {
+class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, configuration: DataverseInstanceConfig) extends TargetedHttpSupport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
   protected val readTimeout: Int = configuration.readTimeout
   protected val baseUrl: URI = configuration.baseUrl
@@ -79,7 +79,7 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
    * @param dryRun do not save the change
    * @return
    */
-  def redetect(dryRun: Boolean = false): Try[DataverseResponse[Any]] = {
+  def redetect(dryRun: Boolean = false): Try[DataverseResponse[DetectionResult]] = {
     trace(dryRun)
     postJsonToTarget("redetect", "", Map("dryRun" -> dryRun.toString))
   }

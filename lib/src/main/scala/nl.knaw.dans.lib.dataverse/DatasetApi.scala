@@ -32,7 +32,7 @@ import scala.util.{ Failure, Try }
  * Functions that operate on a single dataset. See [[https://guides.dataverse.org/en/latest/api/native-api.html#datasets]].
  *
  */
-class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Boolean, configuration: DataverseInstanceConfig) extends TargetedHttpSuport with DebugEnhancedLogging {
+class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Boolean, configuration: DataverseInstanceConfig) extends TargetedHttpSupport with DebugEnhancedLogging {
   private implicit val jsonFormats: Formats = DefaultFormats
 
   protected val connectionTimeout: Int = configuration.connectionTimeout

@@ -23,7 +23,7 @@ import scala.util.Try
 /**
  * HTTP support that targets a specific type of object, such as datasets. The target is specified with an ID.
  */
-private[dataverse] trait TargetedHttpSuport extends HttpSupport {
+private[dataverse] trait TargetedHttpSupport extends HttpSupport {
   private implicit val jsonFormats: Formats = DefaultFormats
 
   protected val targetBase: String
@@ -40,7 +40,7 @@ private[dataverse] trait TargetedHttpSuport extends HttpSupport {
    */
   protected def getVersionedFromTarget[D: Manifest](endPoint: String, version: Version = Version.LATEST): Try[DataverseResponse[D]] = {
     trace(endPoint, version)
-    if (isPersistentId) super.get[D](s"${ targetBase }/:persistentId/versions/${ version }/${ endPoint }?persistentId=$id")
+    if (isPersistentId) super.get[D](s"${ targetBase }/:persistentId/versions/${ version }/${ endPoint }",  Map("persistentId" -> id))
     else super.get[D](s"${ targetBase }/$id/versions/${ version }/${ endPoint }")
   }
 
@@ -58,13 +58,8 @@ private[dataverse] trait TargetedHttpSuport extends HttpSupport {
   }
 
   protected def postJsonToTarget[D: Manifest](endPoint: String, body: String, queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    val queryString = queryParams.map { case (k, v) => s"$k=$v" }.mkString("&")
-    trace(endPoint, queryParams)
-    if (isPersistentId) super.postJson[D](s"${ targetBase }/:persistentId/${ endPoint }?persistentId=$id${
-      if (queryString.nonEmpty) "&" + queryString
-      else ""
-    }")(body)
-    else super.postJson[D](s"${ targetBase }/$id/${ endPoint }$queryString")(body)
+    if (isPersistentId) super.postJson[D](s"${ targetBase }/:persistentId/${ endPoint }")(body, Map("persistentId" -> id) ++ queryParams)
+    else super.postJson[D](s"${ targetBase }/$id/${ endPoint }")(body, queryParams)
   }
 
   protected def postFileToTarget[D: Manifest](endPoint: String, optFile: Option[File], optMetadata: Option[String], queryParams: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
