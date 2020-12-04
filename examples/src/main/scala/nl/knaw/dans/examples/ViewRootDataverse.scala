@@ -26,8 +26,8 @@ object ViewRootDataverse extends App with DebugEnhancedLogging with BaseApp {
     _ = logger.info(s"Raw response message: ${ response.string }")
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
-    dataverseSummary <- response.data
-    _ = logger.info(s"Description of the dataverse: '${ dataverseSummary.description.getOrElse("NO DESCRIPTION FOUND") }'")
+    dataverse <- response.data
+    _ = logger.info(s"Description of the dataverse: '${ dataverse.description.getOrElse("NO DESCRIPTION FOUND") }'")
   } yield ()
   logger.info(s"result = $result")
 }

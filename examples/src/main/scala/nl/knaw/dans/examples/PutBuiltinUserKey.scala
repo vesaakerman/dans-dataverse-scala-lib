@@ -21,6 +21,8 @@ object PutBuiltinUserKey extends App with DebugEnhancedLogging with BaseApp {
   val result = for {
     response <- server.admin().putDatabaseSetting("BuiltinUsers.KEY", props.getString("builtinUserKey"))
     _ = logger.info(s"Raw response message: ${ response.string }")
+    (k, v) <- response.data
+    _ = logger.info(s"key = $k, value = $v")
   } yield ()
   logger.info(s"result = $result")
 }

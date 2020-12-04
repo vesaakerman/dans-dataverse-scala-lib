@@ -9,7 +9,7 @@
     <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
-    <logger name="nl.knaw.dans" level="info" />
-    <logger name="nl.knaw.dans.examples" level="debug"/>
+    <logger name="nl.knaw.dans" level="trace" />
+    <logger name="nl.knaw.dans.examples" level="trace"/>
     <logger name="nl.knaw.dans.examplesjava" level="debug"/>
 </configuration>

@@ -22,14 +22,18 @@ import org.json4s.{ DefaultFormats, Formats }
 
 object CreateBuiltinUser extends App with DebugEnhancedLogging with BaseApp {
   private implicit val jsonFormats: Formats = DefaultFormats
+  private val fn = args(0)
+  private val ln = args(1)
+  private val un = args(2)
+
 
   val user = BuiltinUser(
-    firstName = "John",
-    lastName = "Doe",
-    userName = "jdoe",
+    firstName = fn,
+    lastName = ln,
+    userName = un,
     affiliation = "Nowhereville University",
     position = "Anonymity Officer",
-    email = "jdoe@example.com")
+    email = s"$un@example.com")
 
   val result = for {
     response <- server.builtinUser().create(user, "p4ssw3d")

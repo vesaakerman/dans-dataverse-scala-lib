@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets
 
 import better.files.File
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import scalaj.http.{ Http, HttpRequest, MultiPart }
+import scalaj.http.{ Http, HttpRequest, MultiPart, MultiPartConnectFunc }
 
 import scala.collection.mutable
 import scala.util.Try
@@ -83,7 +83,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
 
     for {
       uri <- createUri(Option(subPath))
-      response <- postMulti[D](uri, partsBuffer.toList)
+      response <- postMulti[D](uri, partsBuffer.toList, headers = headers, params = params)
     } yield response
   }
 
@@ -93,7 +93,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     trace(subPath)
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D](METHOD_GET, uri, body = null, headers, params)
+      response <- bodylessRequest[D](METHOD_GET, uri, headers, params)
     } yield response
   }
 
@@ -104,7 +104,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     trace(subPath, body)
     for {
       uri <- createUri(Option(subPath))
-      response <- post[D](uri, body, headers ++ Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_JSON), params)
+      response <- postString[D](uri, body, headers ++ Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_JSON), params)
     } yield response
   }
 
@@ -114,7 +114,7 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
                                       params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     for {
       uri <- createUri(Option(subPath))
-      response <- post[D](uri, body, headers ++ Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_TEXT), params)
+      response <- postString[D](uri, body, headers ++ Map(HEADER_CONTENT_TYPE -> MEDIA_TYPE_TEXT), params)
     } yield response
   }
 
@@ -124,14 +124,14 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
                                  params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D](METHOD_PUT, uri, body, headers, params)
+      response <- putString[D](uri, body, headers, params)
     } yield response
   }
 
   protected def deletePath[D: Manifest](subPath: String = null, headers: Map[String, String] = Map.empty, params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     for {
       uri <- createUri(Option(subPath))
-      response <- http[D](METHOD_DELETE, uri, null, headers, params)
+      response <- bodylessRequest[D](METHOD_DELETE, uri, headers, params)
     } yield response
   }
 
@@ -143,18 +143,25 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
     baseUrl resolve new URI(s"${ apiPrefix }/${ apiVersion.map(version => s"v$version/").getOrElse("") }${ subPath.getOrElse("") }")
   }
 
-  private def http[D: Manifest](method: String,
-                                uri: URI,
-                                body: String = null,
-                                headers: Map[String, String] = Map.empty,
-                                params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+  // Spiritual request
+  private def bodylessRequest[D: Manifest](method: String,
+                                           uri: URI,
+                                           headers: Map[String, String] = Map.empty,
+                                           params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     dispatchHttp(Http(uri.toASCIIString).method(method), headers, params)
   }
 
-  private def post[D: Manifest](uri: URI,
-                                body: String = null,
-                                headers: Map[String, String] = Map.empty,
-                                params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+  private def putString[D: Manifest](uri: URI,
+                                     body: String = null,
+                                     headers: Map[String, String] = Map.empty,
+                                     params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
+    dispatchHttp(Http(uri.toASCIIString).put(body), headers, params)
+  }
+
+  private def postString[D: Manifest](uri: URI,
+                                      body: String = null,
+                                      headers: Map[String, String] = Map.empty,
+                                      params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
     dispatchHttp(Http(uri.toASCIIString).postData(body), headers, params)
   }
 
@@ -162,12 +169,19 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
                                      parts: List[MultiPart],
                                      headers: Map[String, String] = Map.empty,
                                      params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = {
-    dispatchHttp(Http(uri.toASCIIString).postMulti(parts: _*), headers, params)
+    // Not using postMulti because it installs a UrlBuilder that ignore the query params, which
+    // causes persistentId not to come through. See source of Http.
+    dispatchHttp(Http(uri.toASCIIString).copy(
+      method = METHOD_POST,
+      connectFunc = MultiPartConnectFunc(parts)),
+      headers,
+      params)
   }
 
   private def dispatchHttp[D: Manifest](baseRequest: HttpRequest,
                                         headers: Map[String, String] = Map.empty,
                                         params: Map[String, String] = Map.empty): Try[DataverseResponse[D]] = Try {
+    trace(headers, params)
     val optBasicAuthCredentials = maybeBasicAuthCredentials()
     val headersPlusMaybeApiKey = maybeIncludeApiKey(headers)
     val paramsPlusMaybeUnblockKey = maybeIncludeUnblockKey(params)

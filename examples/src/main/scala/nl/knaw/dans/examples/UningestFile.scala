@@ -29,7 +29,7 @@ object UningestFile extends App with DebugEnhancedLogging with BaseApp {
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
     dataMessage <- response.data
-//    _ = logger.info(s"Message = ${dataMessage.message}")
+    _ = logger.info(s"Message = ${dataMessage.message}")
   } yield ()
   logger.info(s"result = $result")
 }
