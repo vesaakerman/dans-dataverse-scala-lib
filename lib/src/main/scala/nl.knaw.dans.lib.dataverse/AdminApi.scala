@@ -76,4 +76,14 @@ class AdminApi private[dataverse](configuration: DataverseInstanceConfig) extend
     trace(settingName)
     deletePath[Nothing](s"api/admin/setting/${ settingName }")
   }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/installation/config.html#database-settings]]
+   * @param settingName the name of the setting
+   * @return the current value
+   */
+  def getDatabaseSetting(settingName: String): Try[DataverseResponse[String]] = {
+    ???
+    // TODO: getDatabaseSetting
+  }
 }

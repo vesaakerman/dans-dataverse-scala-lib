@@ -286,6 +286,7 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    */
   def addFile(dataFile: File, fileMedataData: FileInfo): Try[DataverseResponse[FileList]] = {
     trace(dataFile, fileMedataData)
+    // TODO: make fileMedataData optional
     postFileToTarget[FileList]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))
   }
 

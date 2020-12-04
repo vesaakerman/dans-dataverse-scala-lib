@@ -17,12 +17,16 @@ package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
 
-import nl.knaw.dans.lib.dataverse.model.file.FileInfo
+import better.files.File
+import nl.knaw.dans.lib.dataverse.model.DataMessage
+import nl.knaw.dans.lib.dataverse.model.dataset.FileList
+import nl.knaw.dans.lib.dataverse.model.file.{ FileInfo, Provenance }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
 
 import scala.util.Try
+import scala.xml.Elem
 
 class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, configuration: DataverseInstanceConfig) extends TargetedHttpSuport with DebugEnhancedLogging {
   protected val connectionTimeout: Int = configuration.connectionTimeout
@@ -42,7 +46,67 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
   private implicit val jsonFormats: Formats = DefaultFormats
 
   /**
-   * Unfortunately, the body of the response is not valid JSON.
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#restrict-files]]
+   * @param restrict `true` if the file must have restricted access, `false` for open access
+   * @return
+   */
+  def restrict(restrict: Boolean): Try[DataverseResponse[DataMessage]] = {
+    trace(restrict)
+    putToTarget("restrict", restrict.toString)
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#uningest-a-file]]
+   * @return
+   */
+  def uningest(): Try[DataverseResponse[Any]] = {
+    ???
+    // TODO: uningest
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#reingest-a-file]]
+   * @return
+   */
+  def reingest(): Try[DataverseResponse[Any]] = {
+    ???
+    // TODO: reingest
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#redetect-file-type]]
+   * @return
+   */
+  def redetect(): Try[DataverseResponse[Any]] = {
+    ???
+    // TODO: redetect
+  }
+
+  /**
+   * Note: if you want to keep the same metadata, you must first read the existing metadata
+   * and pass it back to Dataverse as the `fileMetadata` argument.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#replacing-files]]
+   * @param dataFile       the replacement file
+   * @param fileMedataData the replacement metadata
+   * @return
+   */
+  def replace(dataFile: File, fileMedataData: FileInfo): Try[DataverseResponse[FileList]] = {
+    ???
+    // TODO: replace
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#getting-file-metadata]]
+   * @return
+   */
+  def getMetadata: Try[DataverseResponse[FileInfo]] = {
+    ???
+    // TODO: getMetadata
+  }
+
+  /**
+   * Unfortunately, the body of the response is not valid JSON, hence the `Nothing` payload type.
    *
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#updating-file-metadata]]
    * @param fm file metadata
@@ -52,4 +116,74 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
     trace(fm)
     postFileToTarget[Nothing]("metadata", optFile = None, optMetadata = Option(Serialization.write(fm)))
   }
+
+  // TODO: describe requirements for provided xml
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#editing-variable-level-metadata]]
+   * @param ddiXml DDI xml
+   * @return
+   */
+  def editVariableMetadata(ddiXml: Elem): Try[DataverseResponse[Any]] = {
+    // TODO: editVariableMetadata
+    ???
+  }
+
+  /**
+   * Returns JSON-based provenance.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-provenance-json-for-an-uploaded-file]]
+   * @return
+   */
+  def getProvenanceJson: Try[DataverseResponse[Any]] = {
+    ???
+    // TODO: getProvenanceJson
+  }
+
+  /**
+   * Returns free-form provenance.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#get-provenance-description-for-an-uploaded-file]]
+   * @return
+   */
+  def getProvenanceDescription: Try[DataverseResponse[Any]] = {
+    // TODO: getProvenanceDescription
+    ???
+  }
+
+  /**
+   * Sets JSON-based provenance.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-update-provenance-json-and-provide-related-entity-name-for-an-uploaded-file]]
+   * @param p provenance to set
+   * @return
+   */
+  def putProvenanceJson(p: Provenance): Try[DataverseResponse[Any]] = {
+    ???
+    // TODO: putProvenanceJson
+  }
+
+  /**
+   * Sets free-form provenance.
+   *
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#create-update-provenance-description-for-an-uploaded-file]]
+   */
+  def putProvenanceDescription(p: String): Try[DataverseResponse[Any]] = {
+    ???
+    // TODO: putProvenanceDescription
+  }
+
+  /**
+   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#delete-provenance-json-for-an-uploaded-file]]
+   * @return
+   */
+  def deleteProvenanceJson(): Try[DataverseResponse[Any]] = {
+    ???
+    // TODO: deleteProvenanceJson
+  }
+
+  /*
+   * Datafile Integrity / fixmissingoriginalsizes  not implemented. It is not targeted at a specific file, so this is not the correct place.
+   * Also, it seems it was a one-off function to fix old installations, so of diminishing relevance anyway.
+   */
 }
