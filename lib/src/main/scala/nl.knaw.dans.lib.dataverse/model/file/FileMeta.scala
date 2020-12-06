@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.lib.dataverse.model.file
 
-case class FileInfo(label: Option[String] = None,
+case class FileMeta(label: Option[String] = None,
                     description: Option[String] = None,
                     directoryLabel: Option[String] = None,
                     restrict: Option[Boolean] = None,

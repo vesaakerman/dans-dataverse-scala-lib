@@ -20,7 +20,7 @@ import java.net.URI
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, FieldList, FileList, MetadataBlock, MetadataBlocks, PrivateUrlData }
-import nl.knaw.dans.lib.dataverse.model.file.FileInfo
+import nl.knaw.dans.lib.dataverse.model.file.FileMeta
 import nl.knaw.dans.lib.dataverse.model._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
@@ -103,9 +103,9 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
    * @param version the version of the dataset
    * @return
    */
-  def listFiles(version: Version = Version.LATEST): Try[DataverseResponse[List[FileInfo]]] = {
+  def listFiles(version: Version = Version.LATEST): Try[DataverseResponse[List[FileMeta]]] = {
     trace(version)
-    getVersionedFromTarget[List[FileInfo]]("files", version)
+    getVersionedFromTarget[List[FileMeta]]("files", version)
   }
 
   /**
@@ -279,12 +279,12 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
   }
 
   /**
-   * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#add-a-file-to-a-dataset]]
+   * @see [[  https://guides.dataverse.org/en/latest/api/native-api.html#add-a-file-to-a-dataset]]
    * @param dataFile       the file to upload
    * @param fileMedataData optional metadata for the file
    * @return
    */
-  def addFile(dataFile: File, fileMedataData: FileInfo): Try[DataverseResponse[FileList]] = {
+  def addFile(dataFile: File, fileMedataData: FileMeta): Try[DataverseResponse[FileList]] = {
     trace(dataFile, fileMedataData)
     // TODO: make fileMedataData optional
     postFileToTarget[FileList]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))

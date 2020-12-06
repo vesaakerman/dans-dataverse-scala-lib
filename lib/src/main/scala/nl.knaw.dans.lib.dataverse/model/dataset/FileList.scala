@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.lib.dataverse.model.dataset
 
-import nl.knaw.dans.lib.dataverse.model.file.FileInfo
+import nl.knaw.dans.lib.dataverse.model.file.FileMeta
 
-case class FileList(files: List[FileInfo])
+case class FileList(files: List[FileMeta])
 

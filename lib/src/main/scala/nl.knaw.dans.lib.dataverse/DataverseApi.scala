@@ -255,16 +255,19 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
   }
 
   /**
-   * Import a dataset with an existing persistent identifier.
+   * Import a dataset with an existing persistent identifier, which can be provided as a parameter or in the [[Dataset]] object's
+   * protocol, authority and identifier fields. (E.g. for a DOI: protocol = "doi", authority = "10.5072", identifier = "FK2/12345".)
    *
    * @param dataset     model object defining the dataset
+   * @param optPid      PID provided as parameter
    * @param autoPublish immediately publish dataset after publication
    * @return
    */
-  def importDataset(dataset: model.dataset.Dataset, autoPublish: Boolean = false): Try[DataverseResponse[DatasetCreationResult]] = {
+  def importDataset(dataset: model.dataset.Dataset, optPid: Option[String] = Option.empty, autoPublish: Boolean = false): Try[DataverseResponse[DatasetCreationResult]] = {
     trace(dataset, autoPublish)
     for {
-      pid <- getPid(dataset)
+      pid <- Try { optPid.orElse(getPid(dataset)).getOrElse("") }
+      _ = if (pid.isEmpty) throw new IllegalArgumentException("PID must be provided either as parameter or in the (protocol, authority, identifier) fields of the dataset model object")
       _ = debug(s"Found pid = $pid")
       jsonString <- serializeAsJson(dataset, logger.underlying.isDebugEnabled)
       response <- postJson[DatasetCreationResult](
@@ -275,11 +278,11 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
     } yield response
   }
 
-  private def getPid(dataset: model.dataset.Dataset): Try[String] = Try {
+  private def getPid(dataset: model.dataset.Dataset): Option[String] = {
     if (dataset.datasetVersion.protocol.isEmpty
       || dataset.datasetVersion.authority.isEmpty
-      || dataset.datasetVersion.identifier.isEmpty) throw new IllegalArgumentException("Dataset object does not contain protocol, authority or identifier fields.")
-    else s"${ dataset.datasetVersion.protocol.get }:${ dataset.datasetVersion.authority.get }/${ dataset.datasetVersion.identifier.get }"
+      || dataset.datasetVersion.identifier.isEmpty) Option.empty
+    else Some(s"${ dataset.datasetVersion.protocol.get }:${ dataset.datasetVersion.authority.get }/${ dataset.datasetVersion.identifier.get }")
   }
 
   // TODO: importDataset(jsonFile)

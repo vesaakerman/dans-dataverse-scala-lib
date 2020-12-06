@@ -20,7 +20,7 @@ import java.net.URI
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.DataMessage
 import nl.knaw.dans.lib.dataverse.model.dataset.FileList
-import nl.knaw.dans.lib.dataverse.model.file.{ DetectionResult, FileInfo, Provenance }
+import nl.knaw.dans.lib.dataverse.model.file.{ DetectionResult, FileMeta, Provenance }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
@@ -93,7 +93,7 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
    * @param fileMedataData the replacement metadata
    * @return
    */
-  def replace(dataFile: File, fileMedataData: FileInfo): Try[DataverseResponse[FileList]] = {
+  def replace(dataFile: File, fileMedataData: FileMeta): Try[DataverseResponse[FileList]] = {
     ???
     // TODO: replace
   }
@@ -102,7 +102,7 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#getting-file-metadata]]
    * @return
    */
-  def getMetadata: Try[DataverseResponse[FileInfo]] = {
+  def getMetadata: Try[DataverseResponse[FileMeta]] = {
     ???
     // TODO: getMetadata
   }
@@ -114,7 +114,7 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
    * @param fm file metadata
    * @return
    */
-  def updateMetadata(fm: FileInfo): Try[DataverseResponse[Nothing]] = {
+  def updateMetadata(fm: FileMeta): Try[DataverseResponse[Nothing]] = {
     trace(fm)
     postFileToTarget[Nothing]("metadata", optFile = None, optMetadata = Option(Serialization.write(fm)))
   }
