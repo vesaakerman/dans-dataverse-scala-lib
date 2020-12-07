@@ -16,20 +16,19 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>nl.knaw.dans.shared</groupId>
         <artifactId>dans-scala-project</artifactId>
         <version>6.1.0</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <groupId>nl.knaw.dans.lib</groupId>
     <artifactId>dans-dataverse-scala-lib-examples</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <inceptionYear>2020</inceptionYear>
     <name>DANS Dataverse Scala 2.12 Client Library Examples</name>
     <description>Library with classes and functions for interacting with the Dataverse API</description>
@@ -92,4 +91,8 @@
             <url>https://maven.dans.knaw.nl/snapshots/</url>
         </repository>
     </repositories>
+
+  <scm>
+    <tag>v1.0.1</tag>
+  </scm>
 </project>
