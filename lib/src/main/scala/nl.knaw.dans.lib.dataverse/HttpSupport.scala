@@ -18,10 +18,9 @@ package nl.knaw.dans.lib.dataverse
 import java.io.FileInputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets
-
 import better.files.File
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import scalaj.http.{ Http, HttpRequest, MultiPart, MultiPartConnectFunc }
+import scalaj.http.{ Http, HttpRequest, HttpResponse, MultiPart, MultiPartConnectFunc }
 
 import scala.collection.mutable
 import scala.util.Try
@@ -54,6 +53,8 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   protected val builtinUserKey: Option[String]
   protected val apiPrefix: String
   protected val apiVersion: Option[String]
+  protected val lockedRetryTimes: Int
+  protected val lockedRetryInterval: Int
 
   /**
    * Posts a multi-part message with an optional file and optional JSON metadata part. Probably at least one is required, but since this
@@ -190,13 +191,32 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
       .headers(headersPlusMaybeApiKey)
       .params(paramsPlusMaybeUnblockKey)
       .timeout(connTimeoutMs = connectionTimeout, readTimeoutMs = readTimeout)
-    val response = optBasicAuthCredentials
+    val completeRequest = optBasicAuthCredentials
       .map { case (u, p) => request.auth(u, p) }
-      .getOrElse(request).asBytes
+      .getOrElse(request)
+    val response = getResponse(completeRequest)
     if (response.code >= 200 && response.code < 300) DataverseResponse(response)
     else throw DataverseException(response.code, new String(response.body, StandardCharsets.UTF_8), response)
   }
 
+  private def getResponse(request: HttpRequest): HttpResponse[Array[Byte]] = {
+    var retries = 0
+    var response = request.asBytes
+    while (retries < lockedRetryTimes && mustRetry(response)) {
+      Thread.sleep(lockedRetryInterval)
+      response = request.asBytes
+      retries += 1
+    }
+    response
+  }
+
+  private def mustRetry(response: HttpResponse[Array[Byte]]): Boolean = {
+    val messageBody = new String(response.body, StandardCharsets.UTF_8)
+    (response.code == 403 &&
+      (messageBody.contains("This dataset is locked") || messageBody.contains("Dataset cannot be edited due to dataset lock"))
+      || (response.code == 400 &&
+      messageBody.contains("Failed to add file to dataset")))
+  }
   /**
    * Normally the API-key is sent in a header
    *
