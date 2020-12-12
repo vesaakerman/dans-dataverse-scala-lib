@@ -23,4 +23,7 @@ case class DataverseInstanceConfig(baseUrl: URI,
                                    builtinUserKey: Option[String] = None,
                                    connectionTimeout: Int = 5000,
                                    readTimeout: Int = 300000,
-                                   apiVersion: String = "1")
+                                   apiVersion: String = "1",
+                                   lockedRetryTimes: Int = 10,
+                                   lockedRetryInterval: Int = 500
+                                  )

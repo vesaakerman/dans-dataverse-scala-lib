@@ -35,4 +35,8 @@ package object dataverse {
     if (pretty) Serialization.writePretty(o)
     else Serialization.write(o)
   }
+
+  case class LockException(msg: String, cause: Throwable = null)
+    extends Exception(s"$msg", cause)
+
 }

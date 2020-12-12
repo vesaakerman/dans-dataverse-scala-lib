@@ -31,6 +31,8 @@ class WorkflowsApi private[dataverse](configuration: DataverseInstanceConfig) ex
   protected val builtinUserKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
+  protected val lockedRetryTimes: Int = configuration.lockedRetryTimes
+  protected val lockedRetryInterval: Int = configuration.lockedRetryInterval
 
   def resume(invocationId: String): Try[DataverseResponse[Nothing]] = {
     postText(s"workflows/$invocationId", body = "")

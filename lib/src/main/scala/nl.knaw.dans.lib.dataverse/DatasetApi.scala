@@ -16,7 +16,6 @@
 package nl.knaw.dans.lib.dataverse
 
 import java.net.URI
-
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, FieldList, FileList, MetadataBlock, MetadataBlocks, PrivateUrlData }
@@ -26,6 +25,7 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
 
+import java.lang.Thread.sleep
 import scala.util.{ Failure, Try }
 
 /**
@@ -44,6 +44,8 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
   protected val builtinUserKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
+  protected val lockedRetryTimes: Int = configuration.lockedRetryTimes
+  protected val lockedRetryInterval: Int = configuration.lockedRetryInterval
 
   protected val targetBase: String = "datasets"
   protected val id: String = datasetId
@@ -290,6 +292,26 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
     postFileToTarget[FileList]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))
   }
 
+  def awaitUnlock: Try[Unit] = {
+    var retried = 0
+    var locks = for {
+      response <- getLocks
+      locks <- response.data
+    } yield locks
+    logger.info(s"locks first $locks")
+    while (locks.isSuccess && locks.get.nonEmpty && retried < lockedRetryTimes) {
+      sleep(lockedRetryInterval)
+      logger.info(s"slept for $lockedRetryInterval milliseconds")
+      locks = for {
+        response <- getLocks
+        locks <- response.data
+      } yield locks
+      retried += 1
+    }
+    logger.info(s"locks last $locks")
+    locks.map(l => if (l.nonEmpty) Failure(LockException(s"Dataset $id is locked by ${ l.map(_.lockType).mkString(", ") }, ${ l.map(_.message).mkString(", ") }")) else ())
+  }
+
   /**
    * @see [[https://guides.dataverse.org/en/latest/api/native-api.html#dataset-locks]]
    * @return
@@ -298,4 +320,5 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
     trace(())
     getUnversionedFromTarget[List[Lock]]("locks")
   }
+
 }
