@@ -38,8 +38,6 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
   protected val builtinUserKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
-  protected val lockedRetryTimes: Int = configuration.lockedRetryTimes
-  protected val lockedRetryInterval: Int = configuration.lockedRetryInterval
 
   protected val targetBase: String = "files"
   protected val id: String = filedId

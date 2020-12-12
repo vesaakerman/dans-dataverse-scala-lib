@@ -32,8 +32,6 @@ class SwordApi private[dataverse](configuration: DataverseInstanceConfig) extend
   protected val unblockKey: Option[String] = Option.empty
   protected val builtinUserKey: Option[String] = Option.empty
   protected val apiVersion: Option[String] = Option("1.1") // TODO: Make configurable?
-  protected val lockedRetryTimes: Int = configuration.lockedRetryTimes
-  protected val lockedRetryInterval: Int = configuration.lockedRetryInterval
 
   /**
    * Deletes a file from the current draft of the dataset. To look up the databaseId use [[DatasetApi#listFiles]].

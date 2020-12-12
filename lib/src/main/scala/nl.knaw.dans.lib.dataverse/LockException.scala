@@ -15,15 +15,14 @@
  */
 package nl.knaw.dans.lib.dataverse
 
-import java.net.URI
+import nl.knaw.dans.lib.dataverse.model.Lock
 
-case class DataverseInstanceConfig(baseUrl: URI,
-                                   apiToken: String,
-                                   unblockKey: Option[String] = None,
-                                   builtinUserKey: Option[String] = None,
-                                   connectionTimeout: Int = 5000,
-                                   readTimeout: Int = 300000,
-                                   apiVersion: String = "1",
-                                   awaitUnlockMaxNumberOfRetries: Int = 10,
-                                   awaitUnlockMillisecondsBetweenRetries: Int = 500
-                                  )
+/**
+ * Thrown by [[DatasetApi#awaitUnlock]] if the maximum number of tries is reached and the dataset is still locked.
+ *
+ * @param numberOfTimesTried how many times the unlock check was tried
+ * @param waitTimeInMilliseconds time waited between tries
+ * @param locks list of locks found in last try
+ */
+case class LockException(numberOfTimesTried: Int, waitTimeInMilliseconds: Int, locks: List[Lock]) extends RuntimeException(s"Still locked after $numberOfTimesTried times with $waitTimeInMilliseconds millisecond pauses. Locks: ${ locks.mkString(", ") }")
+

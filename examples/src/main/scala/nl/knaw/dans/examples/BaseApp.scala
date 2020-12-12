@@ -30,8 +30,6 @@ trait BaseApp extends DebugEnhancedLogging{
       apiToken = props.getString("apiKey"),
       unblockKey = Option(props.getString("unblockKey")),
       builtinUserKey = Option(props.getString("builtinUserKey")),
-      lockedRetryTimes = props.getInt("lockedRetryTimes"),
-      lockedRetryInterval = props.getInt("lockedRetryInterval")
     )
   )
 

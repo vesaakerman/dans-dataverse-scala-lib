@@ -15,17 +15,18 @@
  */
 package nl.knaw.dans.lib.dataverse
 
+import java.lang.Thread.sleep
 import java.net.URI
+
 import better.files.File
+import nl.knaw.dans.lib.dataverse.model._
 import nl.knaw.dans.lib.dataverse.model.dataset.UpdateType.UpdateType
 import nl.knaw.dans.lib.dataverse.model.dataset.{ DatasetLatestVersion, DatasetVersion, FieldList, FileList, MetadataBlock, MetadataBlocks, PrivateUrlData }
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta
-import nl.knaw.dans.lib.dataverse.model._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
 
-import java.lang.Thread.sleep
 import scala.util.{ Failure, Try }
 
 /**
@@ -44,8 +45,8 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
   protected val builtinUserKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
-  protected val lockedRetryTimes: Int = configuration.lockedRetryTimes
-  protected val lockedRetryInterval: Int = configuration.lockedRetryInterval
+  protected val awaitUnlockMaxNumberOfRetries: Int = configuration.awaitUnlockMaxNumberOfRetries
+  protected val awaitUnlockMillisecondsBetweenRetries: Int = configuration.awaitUnlockMillisecondsBetweenRetries
 
   protected val targetBase: String = "datasets"
   protected val id: String = datasetId
@@ -282,34 +283,60 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
 
   /**
    * @see [[  https://guides.dataverse.org/en/latest/api/native-api.html#add-a-file-to-a-dataset]]
-   * @param dataFile       the file to upload
-   * @param fileMedataData optional metadata for the file
+   * @param dataFile        the file to upload
+   * @param optFileMetadata optional metadata for the file
    * @return
    */
-  def addFile(dataFile: File, fileMedataData: FileMeta): Try[DataverseResponse[FileList]] = {
-    trace(dataFile, fileMedataData)
-    // TODO: make fileMedataData optional
-    postFileToTarget[FileList]("add", Option(dataFile), Option(Serialization.write(fileMedataData)))
+  def addFile(dataFile: File, optFileMetadata: Option[FileMeta] = Option.empty): Try[DataverseResponse[FileList]] = {
+    trace(dataFile, optFileMetadata)
+    postFileToTarget[FileList]("add", Option(dataFile), optFileMetadata.map(fm => Serialization.write(fm)))
   }
 
-  def awaitUnlock: Try[Unit] = {
-    var retried = 0
-    var locks = for {
-      response <- getLocks
-      locks <- response.data
-    } yield locks
-    logger.info(s"locks first $locks")
-    while (locks.isSuccess && locks.get.nonEmpty && retried < lockedRetryTimes) {
-      sleep(lockedRetryInterval)
-      logger.info(s"slept for $lockedRetryInterval milliseconds")
-      locks = for {
+  /**
+   * Utility function that lets you wait until all locks are cleared before proceeding. Unlike most other functions
+   * in this library, this does not correspond directly with an API call. Rather the [[getLocks]] call is done repeatedly
+   * to check if the locks have been cleared. Note that in scenarios where concurrent processes might access the same dataset
+   * it is not guaranteed that the locks, once cleared, stayed that way.
+   *
+   * @param maxNumberOfRetries     the maximum number the check for unlock is made, defaults to [[awaitUnlockMaxNumberOfRetries]]
+   * @param waitTimeInMilliseconds the time between tries, defaults to [[awaitUnlockMillisecondsBetweenRetries]]
+   * @return
+   * @throws LockException if after the maximum number of retries the dataset is still locked
+   */
+  def awaitUnlock(maxNumberOfRetries: Int = awaitUnlockMaxNumberOfRetries, waitTimeInMilliseconds: Int = awaitUnlockMillisecondsBetweenRetries): Try[Unit] = {
+    trace(maxNumberOfRetries, waitTimeInMilliseconds)
+
+    def getCurrentLocks: Try[List[Lock]] = {
+      for {
         response <- getLocks
         locks <- response.data
+        _ = debug(s"Current locks: ${ locks.mkString(", ") }")
       } yield locks
-      retried += 1
     }
-    logger.info(s"locks last $locks")
-    locks.map(l => if (l.nonEmpty) Failure(LockException(s"Dataset $id is locked by ${ l.map(_.lockType).mkString(", ") }, ${ l.map(_.message).mkString(", ") }")) else ())
+
+    // Note: also returns false if a Failure occurred, i.e. the lock could not be confirmed. It seems reasonable that if an exception
+    // occurred that we stop trying and report the error.
+    def isLockConfirmed(maybeLocks: Try[List[Lock]]): Boolean = {
+      maybeLocks.map(_.nonEmpty).getOrElse(false)
+    }
+
+    def slept(): Boolean = {
+      debug(s"Sleeping $waitTimeInMilliseconds ms before next try..")
+      sleep(waitTimeInMilliseconds)
+      true
+    }
+
+    var numberOfTimesTried = 0
+    var maybeLocks = getCurrentLocks
+    do {
+      maybeLocks = getCurrentLocks
+      numberOfTimesTried += 1
+    } while (isLockConfirmed(maybeLocks) && numberOfTimesTried != maxNumberOfRetries && slept())
+
+    for {
+      locks <- maybeLocks
+      _ = if (locks.nonEmpty) throw LockException(numberOfTimesTried, waitTimeInMilliseconds, locks)
+    } yield ()
   }
 
   /**
@@ -320,5 +347,4 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
     trace(())
     getUnversionedFromTarget[List[Lock]]("locks")
   }
-
 }

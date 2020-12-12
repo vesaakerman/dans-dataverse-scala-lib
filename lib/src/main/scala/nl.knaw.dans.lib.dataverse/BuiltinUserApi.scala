@@ -41,8 +41,6 @@ class BuiltinUserApi private[dataverse](configuration: DataverseInstanceConfig) 
   protected val builtinUserKey: Option[String] = configuration.builtinUserKey
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
-  protected val lockedRetryTimes: Int = configuration.lockedRetryTimes
-  protected val lockedRetryInterval: Int = configuration.lockedRetryInterval
 
   /**
    * @see [[https://guides.dataverse.org/en/5.2/api/native-api.html#create-a-builtin-user]]
