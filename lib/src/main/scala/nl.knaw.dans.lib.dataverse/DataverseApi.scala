@@ -35,8 +35,6 @@ class DataverseApi private[dataverse](dvId: String, configuration: DataverseInst
   protected val builtinUserKey: Option[String] = Option.empty
   protected val apiPrefix: String = "api"
   protected val apiVersion: Option[String] = Option(configuration.apiVersion)
-  protected val lockedRetryTimes: Int = configuration.lockedRetryTimes
-  protected val lockedRetryInterval: Int = configuration.lockedRetryInterval
 
   /**
    * Creates a dataverse base on a definition provided as model object.

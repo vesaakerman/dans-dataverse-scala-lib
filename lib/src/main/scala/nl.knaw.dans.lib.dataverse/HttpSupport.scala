@@ -53,8 +53,6 @@ private[dataverse] trait HttpSupport extends DebugEnhancedLogging {
   protected val builtinUserKey: Option[String]
   protected val apiPrefix: String
   protected val apiVersion: Option[String]
-  protected val lockedRetryTimes: Int
-  protected val lockedRetryInterval: Int
 
   /**
    * Posts a multi-part message with an optional file and optional JSON metadata part. Probably at least one is required, but since this

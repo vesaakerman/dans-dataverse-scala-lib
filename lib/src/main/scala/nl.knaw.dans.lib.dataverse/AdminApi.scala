@@ -32,8 +32,6 @@ class AdminApi private[dataverse](configuration: DataverseInstanceConfig) extend
   protected val builtinUserKey: Option[String] = Option.empty
   protected val apiPrefix: String = ""
   protected val apiVersion: Option[String] = Option.empty // No version allowed here
-  protected val lockedRetryTimes: Int = configuration.lockedRetryTimes
-  protected val lockedRetryInterval: Int = configuration.lockedRetryInterval
 
   /**
    * Returns the account data for a single user.

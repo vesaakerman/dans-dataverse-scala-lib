@@ -18,24 +18,25 @@ package nl.knaw.dans.examples
 import better.files.File
 import nl.knaw.dans.lib.dataverse.model.file.FileMeta
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.json4s.{ DefaultFormats, Formats }
 import org.json4s.native.Serialization
+import org.json4s.{ DefaultFormats, Formats }
 
-object AddFile extends App with DebugEnhancedLogging with BaseApp {
+object AwaitUnlock extends App with DebugEnhancedLogging with BaseApp {
   private implicit val jsonFormats: Formats = DefaultFormats
   private val persistentId = args(0)
+
+  /*
+   * To properly test this, provide a fairly large spreadsheet file and make sure that your Dataverse is configured to convert it to a .tab file.
+   */
   private val filePath = File(args(1))
-  private val directoryLabel = args(2)
-  private val fileMetadata = FileMeta(
-    directoryLabel = Option(directoryLabel),
-    label = Option(filePath.name))
 
   val result = for {
-    response <- server.dataset(persistentId).addFile(filePath, Option(fileMetadata))
+    response <- server.dataset(persistentId).addFile(filePath)
     _ = logger.info(s"Raw response message: ${ response.string }")
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
     fileList <- response.data
+    _ <- server.dataset(persistentId).awaitUnlock(maxNumberOfRetries = 5, waitTimeInMilliseconds = 500)
     _ = logger.info(s"File has ${ fileList.files.head.dataFile.get.checksum.`type` } checksum ${ fileList.files.head.dataFile.get.checksum.value }")
   } yield ()
   logger.info(s"result = $result")
