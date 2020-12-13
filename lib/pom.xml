@@ -28,7 +28,7 @@
 
     <groupId>nl.knaw.dans.lib</groupId>
     <artifactId>dans-dataverse-scala-lib_2.12</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.1.0</version>
     <inceptionYear>2020</inceptionYear>
     <name>DANS Dataverse Scala 2.12 Client Library</name>
     <description>Library with classes and functions for interacting with the Dataverse API</description>
@@ -122,4 +122,8 @@
             <url>https://maven.dans.knaw.nl/snapshots/</url>
         </repository>
     </repositories>
+
+  <scm>
+    <tag>v1.1.0</tag>
+  </scm>
 </project>
