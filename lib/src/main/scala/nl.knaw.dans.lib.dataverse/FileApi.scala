@@ -94,8 +94,8 @@ class FileApi private[dataverse](filedId: String, isPersistentFileId: Boolean, c
    * @return
    */
   def replace(dataFile: File, fileMedataData: FileMeta): Try[DataverseResponse[FileList]] = {
-    ???
-    // TODO: replace
+    trace(dataFile, fileMedataData)
+    postFileToTarget("replace", Option(dataFile), Option(Serialization.write(fileMedataData)))
   }
 
   /**

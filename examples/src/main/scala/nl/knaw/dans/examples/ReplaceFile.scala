@@ -15,21 +15,28 @@
  */
 package nl.knaw.dans.examples
 
+import better.files.File
+import nl.knaw.dans.lib.dataverse.model.file.FileMeta
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
 
-object DeleteFileFromDraft extends App with DebugEnhancedLogging with BaseApp {
+object ReplaceFile extends App with DebugEnhancedLogging with BaseApp {
   private implicit val jsonFormats: Formats = DefaultFormats
-  private val databaseId = args(0)
-  private val persistentId = args(1)
+  private val databaseId = args(0).toInt
+  private val filePath = File(args(1))
+  private val directoryLabel = args(2)
+  private val fileMetadata = FileMeta(
+    directoryLabel = Option(directoryLabel),
+    label = Option(filePath.name))
 
   val result = for {
-    _ <- server.dataset(persistentId).awaitUnlock()
-    response <- server.sword().deleteFile(databaseId.toInt)
+    response <- server.file(databaseId).replace(filePath, fileMetadata)
     _ = logger.info(s"Raw response message: ${ response.string }")
     _ = logger.info(s"JSON AST: ${ response.json }")
     _ = logger.info(s"JSON serialized: ${ Serialization.writePretty(response.json) }")
+    fileList <- response.data
+    _ = logger.info(s"File has ${ fileList.files.head.dataFile.get.checksum.`type` } checksum ${ fileList.files.head.dataFile.get.checksum.value }")
   } yield ()
   logger.info(s"result = $result")
 }
