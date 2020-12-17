@@ -326,16 +326,16 @@ class DatasetApi private[dataverse](datasetId: String, isPersistentDatasetId: Bo
       true
     }
 
-    var numberOfTimesTried = 0
+    var numberOfRetries = 0
     var maybeLocks = getCurrentLocks
-    do {
+    while (isLockConfirmed(maybeLocks) && numberOfRetries < maxNumberOfRetries && slept()) {
       maybeLocks = getCurrentLocks
-      numberOfTimesTried += 1
-    } while (isLockConfirmed(maybeLocks) && numberOfTimesTried != maxNumberOfRetries && slept())
+      numberOfRetries += 1
+    }
 
     for {
       locks <- maybeLocks
-      _ = if (locks.nonEmpty) throw LockException(numberOfTimesTried, waitTimeInMilliseconds, locks)
+      _ = if (locks.nonEmpty) throw LockException(numberOfRetries, waitTimeInMilliseconds, locks)
     } yield ()
   }
 
